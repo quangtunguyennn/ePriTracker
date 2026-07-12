@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomeLayout from './layouts/HomeLayout';
 import Home from './pages/Home';
 import Product from './pages/Product';
+import Admin from './pages/Admin';
+import Login from './pages/Login';
 
 export default function App() {
   return (
@@ -16,8 +18,12 @@ export default function App() {
           
           {/* Khi URL là "/products" -> Products sẽ chui vào nằm trong HomeLayout */}
           <Route path="products" element={<Product />} />
-          
+          {/* Khi URL là "/admin" -> Admin sẽ chui vào nằm trong HomeLayout */}
+          <Route path="admin" element={<Admin />} />
+          {/* Khi URL là "/login" -> Login sẽ chui vào nằm trong HomeLayout */}
+          <Route path="login" element={<Login />} />  
         </Route>
+
       </Routes>
     </BrowserRouter>
   );
