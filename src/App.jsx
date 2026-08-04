@@ -1,29 +1,33 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import HomeLayout from './layouts/HomeLayout';
-import Home from './pages/Home';
-import Product from './pages/Product';
-import Admin from './pages/Admin';
-import Login from './pages/Login';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HomeLayout from "./layouts/HomeLayout";
+import ProductLayout from "./layouts/ProductLayout";
+import DetailLayout from "./layouts/DetailLayout";
+import Home from "./pages/Home";
+import Product from "./pages/Product";
+import Admin from "./pages/Admin";
+import Login from "./pages/Login";
+import Detail from "./pages/Detail";
+
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Bọc HomeLayout ra ngoài cùng. Tất cả các Route con bên trong sẽ tự động thừa hưởng Navbar và Footer */}
         <Route path="/" element={<HomeLayout />}>
-          
-          {/* Khi URL là "/" -> Home sẽ chui vào nằm trong HomeLayout */}
           <Route index element={<Home />} />
-          
-          {/* Khi URL là "/products" -> Products sẽ chui vào nằm trong HomeLayout */}
-          <Route path="products" element={<Product />} />
-          {/* Khi URL là "/admin" -> Admin sẽ chui vào nằm trong HomeLayout */}
-          <Route path="admin" element={<Admin />} />
-          {/* Khi URL là "/login" -> Login sẽ chui vào nằm trong HomeLayout */}
-          <Route path="login" element={<Login />} />  
         </Route>
 
+        <Route path="/products" element={<ProductLayout />}>
+          <Route index element={<Product />} />
+        </Route>
+
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/product/:id" element={<DetailLayout />}>
+          <Route index element={<Detail />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

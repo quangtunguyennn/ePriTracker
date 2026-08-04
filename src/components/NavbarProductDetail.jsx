@@ -1,7 +1,7 @@
 // src/components/Navbar.jsx
 import { Link } from "react-router-dom";
 
-export default function Navbar() {
+export default function NavbarProductDetail() {
   return (
     <nav className=" sticky top-0 z-2 text-black bg-neutral-100 p-4  md:flex  justify-between items-center pl-8 pr-8 shadow-md rounded-br-full  ">
       <div className=" flex gap-2 justify-start">
@@ -35,7 +35,7 @@ export default function Navbar() {
             to=""
             className=" hover:text-yellow-600 transition-colors text-xl font-semibold no-underline font-urbanist"
           >
-            Events
+            Suggestion Products
           </Link>
         </div>
 
