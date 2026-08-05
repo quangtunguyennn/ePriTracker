@@ -93,9 +93,9 @@ export default function Detail() {
 
   // 5. Display UI
   return (
-    <div className="p-8 max-w-5xl mx-auto font-syne">
+    <div className="p-8 max-w-5xl mx-auto">
       {/* ---------------- MAIN PRODUCT INFORMATION ---------------- */}
-      <h1 className="text-3xl font-bold mb-6 text-orange-500">
+      <h1 className=" font-lexend text-3xl italic font-semibold mb-6 text-gray-900">
         {product.productName}
       </h1>
 
@@ -127,8 +127,8 @@ export default function Detail() {
 
       {/* ---------------- SUGGESTED PRODUCTS BLOCK ---------------- */}
       <hr className="border-gray-200 mb-8" />
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        🔥 Similar products with better prices
+      <h2 className="text-3xl font-lexend font-semibold mb-6 text-gray-800">
+         Similar products with better prices
       </h2>
 
       {loadingSuggestions ? (

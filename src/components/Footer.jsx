@@ -31,17 +31,23 @@ export default function () {
                     icon={faStrava}
                     className="mr-4"
                   ></FontAwesomeIcon>
-                  Start Tracking Now !
+                  <a href="/products" className="no-underline text-white">
+                    Start Tracking Now !
+                  </a>
                 </p>
               </div>
 
               <div className="flex gap-12">
-                <p>Home</p>
-                <p>Events</p>
+                <a href="/" className="hover:underline">
+                  Home
+                </a>
+                <a href="/events" className="hover:underline">
+                  Events
+                </a>
               </div>
             </div>
 
-            <div className="flex justify-between font-syne text-sm p-4 border-b border-gray-600 text-gray-500">
+            <div className="flex justify-between cursor-pointer font-syne text-sm p-4 border-b border-gray-600 text-gray-500">
               <div>
                 <p className="hover:underline-offset-4 hover:underline">
                   Terms of Use

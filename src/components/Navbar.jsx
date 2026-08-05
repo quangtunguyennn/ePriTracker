@@ -1,7 +1,13 @@
 // src/components/Navbar.jsx
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import UserIcon from "./UserIcon";
 
 export default function Navbar() {
+  const [isUserIconClicked, setIsUserIconClicked] = useState(false);
+  const toggleUserMenu = () => {
+    setIsUserIconClicked((prevState) => !prevState);
+  };
   return (
     <nav className=" sticky top-0 z-2 text-black bg-neutral-100 p-4  md:flex  justify-between items-center pl-8 pr-8 shadow-md rounded-br-full  ">
       <div className=" flex gap-2 justify-start">
@@ -39,12 +45,15 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 relative">
           <div>
             <img
+              onClick={toggleUserMenu}
               className="w-8 h-8  object-contain cursor-pointer"
               src="user.svg"
             />
+
+            {isUserIconClicked && <UserIcon />}
           </div>
 
           <div>

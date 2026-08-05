@@ -83,6 +83,33 @@ export default function Product() {
       setIsSubmitting(false);
     }
   };
+  // HÀM XÓA SẢN PHẨM & CẬP NHẬT LẠI LIST
+  const handleDeleteProduct = async (id) => {
+    // Hỏi xác nhận trước khi xóa
+    if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(`${BASE_URL}/api/Product/delete`, {
+        params: { id },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      alert("Xóa sản phẩm thành công!");
+
+      // CÁCH 1: Gọi lại API để load danh sách mới nhất từ server
+      fetchProducts();
+
+      // CÁCH 2 (Tối ưu UI nhanh hơn): Lọc trực tiếp ở State local
+      // setProducts(prev => prev.filter(p => p.productId !== id));
+    } catch (error) {
+      console.error("Lỗi xóa sản phẩm:", error);
+      alert(error.response?.data?.message || "Xóa thất bại!");
+    }
+  };
 
   // 4. Hàm hỗ trợ: Dán nhanh link từ Clipboard
   const handlePaste = async () => {
@@ -104,7 +131,8 @@ export default function Product() {
       {/* KHỐI INPUT TRACK LINK SẢN PHẨM */}
       <div className="">
         <div className="flex items-center justify-center w-full px-4">
-          <div className="group flex w-1/2 focus:w-full transition-all duration-500 ease-in-out">
+          {/* Đã sửa focus:w-full thành focus-within:w-full ở dòng dưới đây */}
+          <div className="group flex w-1/2 focus-within:w-full transition-all duration-500 ease-in-out">
             <div className="relative flex-1">
               <input
                 className="w-full h-full border-2 border-gray-300 border-r-0 rounded-l-md pl-12 pr-4 py-2 font-syne text-2xl outline-none"
@@ -146,7 +174,7 @@ export default function Product() {
               <FontAwesomeIcon icon={faMagnifyingGlass} />
             </span>
             <input
-              className="w-full h-full hover:w-full border-2 border-gray-300 border-r-0 rounded-l-md pl-12 pr-4 py-2 font-syne text-lg outline-none focus:border-orange-500 transition-colors"
+              className="w-full h-full hover:w-full border-2 border-gray-300 border-r-0 rounded-l-md pl-12 pr-4 py-2 font-syne text-xl outline-none focus:border-orange-500 transition-colors"
               type="text"
               placeholder="Search products ... "
               value={searchQuery}
@@ -201,21 +229,20 @@ export default function Product() {
           </div>
         ) : (
           filteredProducts.map((item) => (
-            <Link
-              key={item.productId} // Chuyển key ra thẻ ngoài cùng
-              to={`/product/${item.productId}`}
-              className="block w-full sm:w-1/2 md:w-1/3 p-2" // Đưa width ra thẻ Link, thêm 'block'
-            >
+            <div key={item.productId} className="w-full sm:w-1/2 md:w-1/3 p-2">
               <ProductItem
+                productId={item.productId} // Truyền thêm productId vào đây
                 productName={item.productName}
                 image={item.imageURL}
+                desc={item.desc}
                 initialPrice={
                   item.initialPrice
                     ? `${item.initialPrice.toLocaleString("vi-VN")} ₫`
                     : "0 ₫"
                 }
+                onDelete={() => handleDeleteProduct(item.productId)}
               />
-            </Link>
+            </div>
           ))
         )}
       </div>
