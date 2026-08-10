@@ -1,7 +1,12 @@
 /* 1. Luôn đưa các câu lệnh @import URL lên đầu cùng */
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400..800&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap");
 @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Questrial&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Momo+Trust+Display&display=swap');
 @import "tailwindcss";
+@plugin "@tailwindcss/typography"; /* Thêm dòng này vào */
 
 /* 2. Cấu hình Theme cho Tailwind CSS v4 */
 @theme {
@@ -9,4 +14,9 @@
   --font-syne: "Syne", sans-serif;
   --font-raleway: "Raleway", sans-serif;
   --font-lexend: "Lexend", sans-serif;
+  --font-ggf: "Google Sans Flex", sans-serif;
+  --font-bg: "Bricolage Grotesque", sans-serif;
+  --font-questrial : "Questrial", sans-serif;
+  --font-mtd : "Momo Trust Display", sans-serif;
 }
+

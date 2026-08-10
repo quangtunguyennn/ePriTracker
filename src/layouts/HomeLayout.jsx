@@ -9,7 +9,7 @@ export default function HomeLayout() {
       <Navbar />
 
       {/* Vị trí <Outlet /> này sẽ tự động biến thành nội dung của Home hoặc Products */}
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow">
         <Outlet />
       </main>
 

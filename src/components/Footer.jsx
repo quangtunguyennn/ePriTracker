@@ -1,8 +1,13 @@
 import { faFacebook } from "@fortawesome/free-brands-svg-icons";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
+
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
+
 import { faStrava } from "@fortawesome/free-brands-svg-icons";
+
 export default function () {
   return (
     <>
@@ -13,8 +18,11 @@ export default function () {
               <p className="font-syne text-5xl font-black pb-4 italic">
                 ePriTracker
               </p>
+
               {/* <div className="bg-mist-50 rounded-full flex items-center justify-center p-4">
+
                 <img className="w-8 h-8 object-contain" src="paypal.png" />
+
               </div> */}
             </div>
 
@@ -31,6 +39,7 @@ export default function () {
                     icon={faStrava}
                     className="mr-4"
                   ></FontAwesomeIcon>
+
                   <a href="/products" className="no-underline text-white">
                     Start Tracking Now !
                   </a>
@@ -41,36 +50,43 @@ export default function () {
                 <a href="/" className="hover:underline">
                   Home
                 </a>
+
                 <a href="/events" className="hover:underline">
                   Events
                 </a>
               </div>
             </div>
 
-            <div className="flex justify-between cursor-pointer font-syne text-sm p-4 border-b border-gray-600 text-gray-500">
+            <div className="flex justify-between cursor-pointer font-questrial text-[14px] p-4 border-b border-gray-600 text-gray-500">
               <div>
                 <p className="hover:underline-offset-4 hover:underline">
                   Terms of Use
                 </p>
+
                 <p className="hover:underline-offset-4 hover:underline">
                   Data Protection Policy
                 </p>
+
                 <p className="hover:underline-offset-4 hover:underline">
                   Customize Cookies
                 </p>
               </div>
+
               <div>
                 <p className="hover:underline-offset-4 hover:underline">
                   Cookie Statement
                 </p>
+
                 <p className="hover:underline-offset-4 hover:underline">
                   Risk Violation Reporting
                 </p>
               </div>
+
               <div>
                 <p className="hover:underline-offset-4 hover:underline">
                   Vulnerability Disclosure
                 </p>
+
                 <p className="hover:underline-offset-4 hover:underline">
                   Procurement @ ePriTracker
                 </p>
@@ -79,19 +95,22 @@ export default function () {
 
             <div className="flex justify-between text-white font-syne p-4">
               <div>
-                <p className="text-gray-400 font-thin">
+                <p className="text-gray-400 font-medium font-lexend">
                   Copyright @ 2026 TK team.
                 </p>
               </div>
+
               <div className="flex gap-2">
                 <FontAwesomeIcon
                   icon={faFacebook}
                   className="text-2xl"
                 ></FontAwesomeIcon>
+
                 <FontAwesomeIcon
                   icon={faLinkedin}
                   className="text-2xl"
                 ></FontAwesomeIcon>
+
                 <FontAwesomeIcon
                   icon={faEnvelope}
                   className="text-2xl"

@@ -1,86 +1,94 @@
-import { Link } from "react-router-dom"; // Hoặc "next/link" nếu dùng Next.js
-import axios from "axios";
-export default function ProductItem(props) {
-  const { productId, productName, image, desc, initialPrice, onDelete } = props;
-  
+import { Link } from "react-router-dom";
+
+export default function ProductItem({
+  productId,
+  productName,
+  image,
+  desc,
+  initialPrice,
+  onDelete,
+}) {
   return (
-    <article className="shadow-lg w-full h-full p-4 bg-white rounded-lg flex flex-col justify-between">
+    <article className="group relative flex flex-col justify-between w-full h-full bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300 overflow-hidden">
+      {/* 1. MAIN CONTENT AREA */}
       <div>
-        {/* 1. CHỈ BỌC LINK CHO ẢNH */}
+        {/* Fixed 1:1 aspect ratio image container */}
         <Link
           to={`/product/${productId}`}
-          className="block overflow-hidden rounded-md group"
+          className="block relative aspect-square w-full overflow-hidden bg-gray-50 cursor-pointer"
         >
           <img
-            src={image}
+            src={image || "/placeholder-product.png"}
             alt={productName}
-            className="w-full h-auto  object-cover rounded-md transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
           />
         </Link>
 
-        <div className="mt-4 flex flex-col justify-between">
-          <div>
-            {/* 2. CHỈ BỌC LINK CHO TÊN SẢN PHẨM */}
-            <Link
-              to={`/product/${productId}`}
-              className="font-raleway font-semibold text-2xl hover:text-blue-600 transition-colors inline-block"
-            >
-              {productName}
-            </Link>
+        {/* Product Information */}
+        <div className="p-5">
+          {/* Product Name (Max 2 lines limit) */}
+          <Link
+            to={`/product/${productId}`}
+            title={productName}
+            className="font-questrial font-semibold text-lg  text-gray-900 hover:text-orange-600 transition-colors line-clamp-2 leading-snug"
+          >
+            {productName}
+          </Link>
 
-            <p className="font-urbanist text-lg text-gray-600 line-clamp-2 mt-1">
+          {/* Product Description (If available) */}
+          {desc && (
+            <p className="text-xs text-gray-500 line-clamp-2 mt-1.5 leading-relaxed">
               {desc}
             </p>
-          </div>
+          )}
 
-          <p className="font-urbanist pt-2 text-3xl font-medium text-red-900 mt-2">
-            {initialPrice}
-          </p>
+          {/* Price Display */}
+          <div className="mt-4 pt-3 border-t border-gray-50 flex items-baseline justify-between">
+            <div>
+              <span className="text-[11px] uppercase tracking-wider font-semibold text-gray-400 block mb-0.5">
+                Tracked Price
+              </span>
+              <span className="font-urbanist text-2xl font-bold text-orange-600">
+                {initialPrice}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Cụm nút bấm */}
-      <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-100 gap-2">
-        {/* Nút Delete độc lập, không bị nảy sang trang detail */}
+      {/* 2. ACTION BUTTONS */}
+      <div className="p-5 pt-0 mt-auto grid grid-cols-2 gap-2.5">
+        {/* Delete Button */}
         <button
           type="button"
           onClick={onDelete}
-          className="px-20 py-2 text-lg font-syne  text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-lg transition-colors duration-200 flex items-center gap-1.5 cursor-pointer"
+          className="w-full py-2.5 px-3 text-sm font-semibold font-syne text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer"
         >
           <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+            className="w-5 h-5"
+            fill="currentColor"
+            viewBox="0 0 640 640"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
+            <path d="M232.7 69.9L224 96L128 96C110.3 96 96 110.3 96 128C96 145.7 110.3 160 128 160L512 160C529.7 160 544 145.7 544 128C544 110.3 529.7 96 512 96L416 96L407.3 69.9C402.9 56.8 390.7 48 376.9 48L263.1 48C249.3 48 237.1 56.8 232.7 69.9zM512 208L128 208L149.1 531.1C150.7 556.4 171.7 576 197 576L443 576C468.3 576 489.3 556.4 490.9 531.1L512 208z" />
           </svg>
           Delete
         </button>
 
-        {/* 3. NÚT DETAIL BỌC BẰNG LINK ĐỂ CHUYỂN TRANG */}
+        {/* Details Button */}
         <Link
           to={`/product/${productId}`}
-          className="px-8 py-2 text-lg font-syne font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm hover:shadow transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
+          className="w-full py-2.5 px-3 text-sm font-semibold font-syne text-white bg-slate-900 hover:bg-slate-800 active:bg-black rounded-xl shadow-sm hover:shadow transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer"
         >
-          Detail
+          Details
           <svg
             className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+            fill="currentColor"
+            viewBox="0 0 640 640"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 5l7 7-7 7"
-            />
+            <path d="M471.1 297.4C483.6 309.9 483.6 330.2 471.1 342.7L279.1 534.7C266.6 547.2 246.3 547.2 233.8 534.7C221.3 522.2 221.3 501.9 233.8 489.4L403.2 320L233.9 150.6C221.4 138.1 221.4 117.8 233.9 105.3C246.4 92.8 266.7 92.8 279.2 105.3L471.2 297.3z" />
           </svg>
         </Link>
       </div>

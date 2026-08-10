@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 export default function DetailLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+  
       {/* Navbar luôn xuất hiện ở trên cùng của mọi trang dùng layout này */}
       <NavbarProductDetail />
 
