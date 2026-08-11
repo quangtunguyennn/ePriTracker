@@ -51,115 +51,211 @@ export default function Detail() {
         setLoadingSuggestions(true);
         setErrorSuggestions(null);
         const response = await axios.get(
-          `${BASE_URL}/api/Product/suggestion/${id}`,
+          `${BASE_URL}/api/product/suggestion/${id}`,
           { headers: headers },
         );
         setSuggestions(response.data);
       } catch (err) {
         console.error("Error fetching suggestions:", err);
+        // Lưu thông báo lỗi vào state, không đặt thẻ HTML trực tiếp ở đây
         setErrorSuggestions("Cannot load recommended products.");
       } finally {
         setLoadingSuggestions(false);
       }
     };
-
     fetchProductDetail();
     fetchSuggestions();
   }, [id]);
 
+  // Format Date Helper
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "Recently";
+    return new Date(dateString).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 font-syne">
+    <div className="min-h-screen bg-slate-50/50 py-10 px-4 sm:px-6 lg:px-8 font-syne selection:bg-orange-100 selection:text-orange-900">
       <div className="max-w-6xl mx-auto space-y-8" id="detail">
-        {/* Navigation / Breadcrumb */}
+        {/* Navigation / Breadcrumb - Placeholder for future use */}
+        <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+          <Link
+            to="/products"
+            className="hover:text-orange-600 transition-colors"
+          >
+            Products
+          </Link>
+          <span>/</span>
+          <span className="text-slate-900">Product Detail</span>
+        </div>
 
         {/* ---------------- 1. MAIN PRODUCT SECTION ---------------- */}
         {loading ? (
           // SKELETON LOADER
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10 animate-pulse">
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 animate-pulse">
+            <div className="w-40 h-8 bg-slate-100 rounded-full mb-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="aspect-square bg-gray-200 rounded-xl w-full"></div>
+              <div className="aspect-square bg-slate-100 rounded-2xl w-full"></div>
               <div className="space-y-6 pt-4">
-                <div className="h-8 bg-gray-200 rounded-md w-3/4"></div>
-                <div className="h-6 bg-gray-200 rounded-md w-1/2"></div>
-                <div className="space-y-3 mt-8">
-                  <div className="h-10 bg-gray-200 rounded-md w-1/3"></div>
-                  <div className="h-4 bg-gray-200 rounded-md w-1/4"></div>
+                <div className="space-y-3">
+                  <div className="h-10 bg-slate-100 rounded-lg w-full"></div>
+                  <div className="h-10 bg-slate-100 rounded-lg w-3/4"></div>
                 </div>
+                <div className="h-32 bg-slate-100 rounded-2xl w-full mt-8"></div>
               </div>
             </div>
           </div>
         ) : error ? (
           // ERROR STATE
-          <div className="bg-red-50 text-red-600 rounded-2xl p-8 text-center border border-red-100">
-            <svg
-              className="w-12 h-12 mx-auto mb-3 opacity-50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
+          <div className="bg-red-50 text-red-600 rounded-3xl p-10 text-center border border-red-100">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
             <p className="text-lg font-medium">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-6 py-2 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors font-semibold"
+            >
+              Try Again
+            </button>
           </div>
         ) : !product ? (
           // NOT FOUND STATE
-          <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
-            <p className="text-xl text-gray-500 font-medium">
+          <div className="bg-white rounded-3xl p-16 text-center shadow-sm border border-slate-100">
+            <span className="text-6xl mb-4 block">🔍</span>
+            <p className="text-2xl text-slate-700 font-bold mb-2">
               Product not found!
+            </p>
+            <p className="text-slate-500">
+              The product you're looking for doesn't exist or has been removed.
             </p>
           </div>
         ) : (
           <>
             {/* MAIN INFO CARD */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 lg:p-12">
+              <div className="mb-8 flex flex-col md:flex-row md:items-start justify-between gap-6">
+                <div className="flex-1 min-w-0">
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest rounded-full w-max mb-4 border border-emerald-200/60">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Product Detail
+                  </span>
+                  <h1 className="font-questrial text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-slate-900 break-words">
+                    {product.productName}
+                  </h1>
+                </div>
+              </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10">
-              <div>
-                <span className="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-xl font-bold uppercase tracking-widest rounded-full w-max mb-4">
-                  Tracking Detail
-                </span>
-              </div>
-              <div className="text-center shadow-sm">
-                <h1 className="font-questrial py-4 text-start pr-2 pl-8 text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight text-gray-900 mb-6">
-                  {product.productName}
-                </h1>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
                 {/* Product Image */}
-                <div className="relative w-full aspect-square bg-gray-50 rounded-xl overflow-hidden border border-gray-100 flex items-center justify-center p-4">
+                <div className="lg:col-span-5 relative w-full aspect-square bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 flex items-center justify-center p-6 group">
                   <img
                     src={product.imageURL || "https://via.placeholder.com/400"}
                     alt={product.productName || "Product"}
-                    className="w-full h-full object-contain mix-blend-multiply"
+                    className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                 </div>
 
-                {/* Product Details */}
-
-                <div className="flex flex-col h-full">
-                  <div className="bg-orange-50 border border-orange-100 rounded-xl p-6 mb-8">
-                    <p className="text-sm text-gray-500 mb-1 uppercase font-semibold tracking-wide">
-                      Tracked Price
-                    </p>
-                    <p className="text-4xl text-orange-600 font-bold font-urbanist">
-                      {product.initialPrice?.toLocaleString("vi-VN")} ₫
-                    </p>
-
-                    {/* Placeholder for Latest Price if your API provides it */}
-                    {product.latestPrice && (
-                      <div className="mt-4 pt-4 border-t border-orange-200/50 flex justify-between items-center">
-                        <span className="text-gray-600 font-medium">
-                          Current Market Price:
+                {/* Product Details & Price Dashboard */}
+                <div className="lg:col-span-7 flex flex-col h-full min-w-0">
+                  {/* Price Box */}
+                  <div className="bg-gradient-to-br from-orange-50 to-amber-50/30 border border-orange-100/80 rounded-2xl p-6 md:p-8 mb-8 shadow-[inset_0_1px_4px_rgba(255,255,255,0.5)]">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 pb-6 border-b border-orange-200/50">
+                      {/* Tracked Price (Initial) */}
+                      <div className="min-w-0">
+                        <span className="text-[11px] text-gray-800 uppercase font-bold tracking-wider mb-1.5 block">
+                          Tracked Price
                         </span>
-                        <span className="text-xl font-bold text-gray-900">
-                          {product.latestPrice.toLocaleString("vi-VN")} ₫
+                        <span
+                          title={`${product.initialPrice} ₫`}
+                          className="text-2xl text-slate-400 font-bold font-questrial  decoration-slate-300 block truncate"
+                        >
+                          {product.initialPrice?.toLocaleString("vi-VN")} ₫
                         </span>
                       </div>
-                    )}
+
+                      {/* Current Market Price */}
+                      {product.latestPrice && (
+                        <div className="min-w-0 sm:text-right">
+                          <span className="text-[11px] text-orange-600 uppercase font-bold tracking-wider mb-1.5 block">
+                            Current Market Price
+                          </span>
+                          <span
+                            title={`${product.latestPrice} ₫`}
+                            className="text-4xl text-orange-600 font-black font-questrial leading-none block truncate tracking-tight drop-shadow-sm"
+                          >
+                            {product.latestPrice?.toLocaleString("vi-VN")} ₫
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Meta Info (Last Updated) */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 text-sm font-medium">
+                      <div className="flex items-center gap-2 text-slate-500 font-urbanist font-bold text-lg">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        Last updated:{" "}
+                        <span className="text-slate-700 font-urbanist font-medium">
+                          {formatDateTime(
+                            product.lastUpdatedAt || product.updatedAt,
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Optional Product Link */}
+                      {product.productLink && (
+                        <a
+                          href={product.productLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-semibold text-sm hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-500/20 active:scale-[0.98] transition-all duration-200"
+                        >
+                          Visit Store
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -167,25 +263,40 @@ export default function Detail() {
 
             {/* ---------------- 2. DESCRIPTION SECTION ---------------- */}
             <div
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10"
+              className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10"
               id="description"
             >
-              <div>
-                <span className="inline-block px-3 py-1 mb-10 bg-gray-100 text-gray-600 text-xl font-bold uppercase tracking-widest rounded-full w-max mb-4">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-slate-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 6h16M4 12h16M4 18h7"
+                    />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 font-questrial">
                   Product Description
-                </span>
+                </h2>
               </div>
 
               {product.description &&
               typeof product.description === "string" ? (
                 <div
-                  className="prose prose-slate font-ggf prose-lg max-w-none text-gray-600"
+                  className="prose prose-slate prose-lg max-w-none text-slate-600 font-ggf   leading-relaxed marker:text-orange-500"
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
               ) : (
-                <div className="text-center py-10">
+                <div className="bg-slate-50 rounded-2xl text-center py-12 border border-slate-100 border-dashed">
                   <svg
-                    className="w-12 h-12 text-gray-300 mx-auto mb-3"
+                    className="w-12 h-12 text-slate-300 mx-auto mb-3"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -197,8 +308,8 @@ export default function Detail() {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  <p className="text-gray-500 font-medium">
-                    No description available for this product.
+                  <p className="text-slate-500 font-medium">
+                    No detailed description available for this product.
                   </p>
                 </div>
               )}
@@ -207,11 +318,16 @@ export default function Detail() {
         )}
 
         {/* ---------------- 3. SUGGESTIONS SECTION ---------------- */}
-        <div className="pt-8" id="suggestion">
-          <div>
-            <span className="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-xl font-bold uppercase tracking-widest rounded-full w-max mb-4">
-              Suggestion Deals 
-            </span>
+        <div className="pt-4" id="suggestion">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div>
+              <span className="inline-block  py-1 bg-gray-100 text-gray-600 text-xl font-bold uppercase tracking-widest rounded-full w-max mb-4">
+                Suggestion Deals
+              </span>
+              <p className="text-slate-500 text-lg font-syne">
+                Similar products with better pricing options.
+              </p>
+            </div>
           </div>
 
           {loadingSuggestions ? (
@@ -220,29 +336,29 @@ export default function Detail() {
               {[...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm animate-pulse"
+                  className="bg-white border border-slate-100 p-5 rounded-3xl shadow-sm animate-pulse"
                 >
-                  <div className="w-full h-48 bg-gray-200 rounded-xl mb-4"></div>
-                  <div className="h-5 bg-gray-200 rounded w-full mb-2"></div>
-                  <div className="h-5 bg-gray-200 rounded w-2/3 mb-6"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/2 mb-4"></div>
-                  <div className="h-10 bg-gray-200 rounded-lg w-full"></div>
+                  <div className="w-full h-48 bg-slate-100 rounded-2xl mb-5"></div>
+                  <div className="h-4 bg-slate-100 rounded w-full mb-2"></div>
+                  <div className="h-4 bg-slate-100 rounded w-2/3 mb-6"></div>
+                  <div className="h-8 bg-slate-100 rounded w-1/2 mb-4"></div>
+                  <div className="h-11 bg-slate-100 rounded-xl w-full"></div>
                 </div>
               ))}
             </div>
           ) : errorSuggestions ? (
-            <div className="bg-white p-8 rounded-2xl border border-red-100 text-center text-red-500">
+            <div className="bg-red-50 p-8 rounded-3xl font-questrial text-xl border border-red-100 text-center text-red-500 font-medium">
               {errorSuggestions}
             </div>
           ) : suggestions.length === 0 ? (
-            <div className="bg-white py-12 px-4 rounded-2xl shadow-sm border border-gray-100 border-dashed text-center">
-              <span className="text-4xl mb-3 block">🕵️</span>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">
+            <div className="bg-white py-16 px-4 rounded-3xl shadow-sm border border-slate-100 border-dashed text-center">
+              <span className="text-5xl mb-4 block"></span>
+              <h3 className="text-xl font-bold text-slate-900 mb-2 font-questrial">
                 No better deals found
               </h3>
-              <p className="text-gray-500">
+              <p className="text-slate-500 max-w-md mx-auto">
                 We couldn't find any similar products with a lower price at the
-                moment.
+                moment. You're already looking at a great deal!
               </p>
             </div>
           ) : (
@@ -250,29 +366,35 @@ export default function Detail() {
               {suggestions.map((item, index) => (
                 <div
                   key={item.id || index}
-                  className="group relative bg-white border border-gray-100 p-4 rounded-2xl shadow-sm hover:shadow-xl hover:border-gray-200 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
+                  className="group relative bg-white border border-slate-100 p-5 rounded-3xl shadow-sm hover:shadow-xl hover:border-slate-300 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full overflow-hidden"
                 >
                   {/* Savings Badge */}
                   {item.savingsAmount > 0 && (
-                    <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">
+                    <div className="absolute top-4 left-4 bg-rose-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-full z-10 shadow-sm border border-rose-400">
                       Save {item.savingsAmount?.toLocaleString("vi-VN")} ₫
                     </div>
                   )}
 
-                  <div className="relative aspect-[4/3] w-full bg-gray-50 rounded-xl mb-4 p-2 overflow-hidden">
+                  <div className="relative aspect-[4/3] w-full bg-slate-50 rounded-2xl mb-5 p-4 overflow-hidden">
                     <img
                       src={item.imageURL || "https://via.placeholder.com/200"}
                       alt={item.productName || "Product"}
-                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 ease-out"
                     />
                   </div>
 
-                  <h3 className="font-semibold font-questrial text-gray-800 text-base mb-2 line-clamp-2 leading-snug flex-grow group-hover:text-orange-600 transition-colors">
+                  <h3
+                    title={item.productName}
+                    className="font-bold font-questrial text-slate-800 text-base mb-3 line-clamp-2 leading-snug flex-grow group-hover:text-orange-600 transition-colors break-words"
+                  >
                     {item.productName}
                   </h3>
 
-                  <div className="mt-auto pt-3 border-t border-gray-50">
-                    <p className="text-orange-600 font-urbanist font-bold text-xl mb-3">
+                  <div className="mt-auto pt-4 border-t border-slate-100">
+                    <p
+                      title={`${item.price} ₫`}
+                      className="text-orange-600 font-questrial font-black text-2xl mb-4 truncate"
+                    >
                       {item.price?.toLocaleString("vi-VN")} ₫
                     </p>
 
@@ -281,7 +403,7 @@ export default function Detail() {
                         href={item.productLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center w-full bg-slate-900 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-orange-600 transition-colors duration-200"
+                        className="flex items-center justify-center w-full bg-slate-100 text-slate-800 py-3 rounded-xl font-bold text-sm hover:bg-slate-900 hover:text-white active:scale-[0.98] transition-all duration-200"
                       >
                         View Offer
                         <svg
@@ -301,7 +423,7 @@ export default function Detail() {
                     ) : (
                       <button
                         disabled
-                        className="w-full bg-gray-100 text-gray-400 py-2.5 rounded-xl font-semibold text-sm cursor-not-allowed"
+                        className="w-full bg-slate-50 text-slate-400 py-3 rounded-xl font-bold text-sm cursor-not-allowed border border-slate-100"
                       >
                         Link Unavailable
                       </button>

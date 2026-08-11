@@ -34,7 +34,7 @@ export default function Product() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/api/Product/getAll`, {
+      const response = await axios.get(`${BASE_URL}/api/product/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProducts(response.data);
@@ -64,7 +64,7 @@ export default function Product() {
     try {
       setIsSubmitting(true);
       const token = localStorage.getItem("token");
-      const endpoint = `${BASE_URL}/api/Product/add`;
+      const endpoint = `${BASE_URL}/api/product/add`;
 
       await axios.post(endpoint, JSON.stringify(linkProduct), {
         headers: {
@@ -119,7 +119,7 @@ export default function Product() {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${BASE_URL}/api/Product/delete`, {
+      await axios.delete(`${BASE_URL}/api/product/delete`, {
         params: { id },
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -368,6 +368,14 @@ export default function Product() {
                         ? `${item.initialPrice.toLocaleString("vi-VN")} ₫`
                         : "0 ₫"
                     }
+                    latestPrice={
+                      item.latestPrice
+                        ? `${item.latestPrice.toLocaleString("vi-VN")} ₫`
+                        : "0 ₫"
+                    }
+                    // 👇 Truyền thêm 2 dữ liệu mới vào đây 👇
+                    productLink={item.productLink}
+                    lastUpdatedAt={item.lastUpdatedAt}
                     onDelete={() => handleDeleteProduct(item.productId)}
                   />
                 </div>
