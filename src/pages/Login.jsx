@@ -132,7 +132,7 @@ export default function Login() {
             {/* Email Input */}
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-slate-700">
-                Work Email
+                Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -161,7 +161,7 @@ export default function Login() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  className="block w-full pl-11 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 outline-none transition-all duration-200"
+                  className="block w-full pl-11 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 outline-none transition-all duration-200 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

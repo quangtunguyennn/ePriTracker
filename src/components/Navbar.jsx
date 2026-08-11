@@ -82,13 +82,16 @@ export default function Navbar() {
             {isUserIconClicked && <UserIcon />}
           </div>
 
-          <div>
-            <img
-              className="w-7 h-7 object-contain cursor-pointer"
-              src="notify.svg"
-              alt="Notifications"
-            />
-          </div>
+          {/* 4. Ẩn/hiện icon thông báo dựa trên trạng thái đăng nhập */}
+          {isLoggedIn && (
+            <div>
+              <img
+                className="w-7 h-7 object-contain cursor-pointer"
+                src="notify.svg"
+                alt="Notifications"
+              />
+            </div>
+          )}
         </div>
       </div>
     </nav>

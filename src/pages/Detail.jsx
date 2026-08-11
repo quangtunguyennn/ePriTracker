@@ -124,7 +124,7 @@ export default function Detail() {
                 </span>
               </div>
               <div className="text-center shadow-sm">
-                <h1 className="font-questrial py-4 text-start px-2 text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight text-gray-900 mb-6">
+                <h1 className="font-questrial py-4 text-start pr-2 pl-8 text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight text-gray-900 mb-6">
                   {product.productName}
                 </h1>
               </div>
