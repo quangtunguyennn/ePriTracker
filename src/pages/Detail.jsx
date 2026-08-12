@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { RefreshCw, Sparkles } from "lucide-react";
 
 export default function Detail() {
   const { id } = useParams();
@@ -57,12 +58,12 @@ export default function Detail() {
         setSuggestions(response.data);
       } catch (err) {
         console.error("Error fetching suggestions:", err);
-        // Lưu thông báo lỗi vào state, không đặt thẻ HTML trực tiếp ở đây
         setErrorSuggestions("Cannot load recommended products.");
       } finally {
         setLoadingSuggestions(false);
       }
     };
+
     fetchProductDetail();
     fetchSuggestions();
   }, [id]);
@@ -79,10 +80,42 @@ export default function Detail() {
     });
   };
 
+  // 🔥 XỬ LÝ LÀM MỚI DANH SÁCH GỢI Ý (FORCE REFRESH)
+  const handleRefreshBtn = async () => {
+    if (!id || loadingSuggestions) return;
+
+    const token = localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    try {
+      setLoadingSuggestions(true);
+      setErrorSuggestions(null);
+
+      // Gọi API /api/product/refresh-suggestions
+      const response = await axios.get(
+        `${BASE_URL}/api/product/refresh-suggestions`,
+        {
+          params: { productId: id },
+          headers: headers,
+        },
+      );
+
+      // Cập nhật danh sách gợi ý mới thu thập được
+      setSuggestions(response.data);
+    } catch (err) {
+      console.error("Error refreshing suggestions:", err);
+      setErrorSuggestions(
+        "Failed to refresh suggestions. Please try again later.",
+      );
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50/50 py-10 px-4 sm:px-6 lg:px-8 font-syne selection:bg-orange-100 selection:text-orange-900">
       <div className="max-w-6xl mx-auto space-y-8" id="detail">
-        {/* Navigation / Breadcrumb - Placeholder for future use */}
+        {/* Navigation / Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
           <Link
             to="/products"
@@ -185,7 +218,7 @@ export default function Detail() {
                         </span>
                         <span
                           title={`${product.initialPrice} ₫`}
-                          className="text-2xl text-slate-400 font-bold font-questrial  decoration-slate-300 block truncate"
+                          className="text-2xl text-slate-400 font-bold font-questrial block truncate"
                         >
                           {product.initialPrice?.toLocaleString("vi-VN")} ₫
                         </span>
@@ -290,7 +323,7 @@ export default function Detail() {
               {product.description &&
               typeof product.description === "string" ? (
                 <div
-                  className="prose prose-slate prose-lg max-w-none text-slate-600 font-ggf   leading-relaxed marker:text-orange-500"
+                  className="prose prose-slate prose-lg max-w-none text-slate-600 font-ggf leading-relaxed marker:text-orange-500"
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
               ) : (
@@ -319,7 +352,8 @@ export default function Detail() {
 
         {/* ---------------- 3. SUGGESTIONS SECTION ---------------- */}
         <div className="pt-4" id="suggestion">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <span className="inline-block  py-1 bg-gray-100 text-gray-600 text-xl font-bold uppercase tracking-widest rounded-full w-max mb-4">
                 Suggestion Deals
@@ -328,8 +362,27 @@ export default function Detail() {
                 Similar products with better pricing options.
               </p>
             </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefreshBtn}
+              disabled={loadingSuggestions}
+              className="group mt-4 inline-flex font-questrial text-lg cursor-pointer items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 active:scale-95 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 self-start sm:self-auto"
+            >
+              <RefreshCw
+                className={`w-4 h-4 text-gray-400  group-hover:text-amber-600 transition-transform duration-500 ${
+                  loadingSuggestions
+                    ? "animate-spin text-amber-600"
+                    : "group-hover:rotate-180"
+                }`}
+              />
+              <span>
+                {loadingSuggestions ? "Refreshing..." : "Refresh suggestions"}
+              </span>
+            </button>
           </div>
 
+          {/* Suggestions Content */}
           {loadingSuggestions ? (
             // SUGGESTIONS SKELETON
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -347,12 +400,14 @@ export default function Detail() {
               ))}
             </div>
           ) : errorSuggestions ? (
+            // ERROR STATE
             <div className="bg-red-50 p-8 rounded-3xl font-questrial text-xl border border-red-100 text-center text-red-500 font-medium">
               {errorSuggestions}
             </div>
           ) : suggestions.length === 0 ? (
+            // EMPTY STATE
             <div className="bg-white py-16 px-4 rounded-3xl shadow-sm border border-slate-100 border-dashed text-center">
-              <span className="text-5xl mb-4 block"></span>
+              <span className="text-5xl mb-4 block">🏷️</span>
               <h3 className="text-xl font-bold text-slate-900 mb-2 font-questrial">
                 No better deals found
               </h3>
@@ -362,6 +417,7 @@ export default function Detail() {
               </p>
             </div>
           ) : (
+            // SUGGESTIONS GRID
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {suggestions.map((item, index) => (
                 <div
@@ -397,7 +453,12 @@ export default function Detail() {
                     >
                       {item.price?.toLocaleString("vi-VN")} ₫
                     </p>
-
+                    <div className="mb-2">
+                      <p className="text-sm font-questrial font-bold text-slate-800">Last updated at -</p>
+                      <p className="text-sm font-extrabold font-urbanist text-slate-600">
+                        {formatDateTime(item.lastUpdatedAt)}
+                      </p>
+                    </div>
                     {item.productLink ? (
                       <a
                         href={item.productLink}
