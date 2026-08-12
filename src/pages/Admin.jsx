@@ -4,11 +4,11 @@ export default function Admin() {
   const [activeMenu, setActiveMenu] = useState('dashboard');
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'tracking', label: 'Quản lý Theo dõi Giá', icon: '📈' },
-    { id: 'vouchers', label: 'Phát hiện Voucher', icon: '🏷️' },
-    { id: 'users', label: 'Quản lý Người dùng', icon: '👥' },
-    { id: 'settings', label: 'Cài đặt hệ thống', icon: '⚙️' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'tracking', label: 'Quản lý Theo dõi Giá' },
+    { id: 'vouchers', label: 'Phát hiện Voucher' },
+    { id: 'users', label: 'Quản lý Người dùng' },
+    { id: 'settings', label: 'Cài đặt hệ thống' },
   ];
 
   return (
@@ -24,20 +24,18 @@ export default function Admin() {
             <button
               key={item.id}
               onClick={() => setActiveMenu(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                activeMenu === item.id
-                  ? 'bg-blue-50 text-blue-700 font-medium'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeMenu === item.id
+                ? 'bg-blue-50 text-blue-700 font-medium'
+                : 'text-gray-600 hover:bg-gray-50'
+                }`}
             >
-              <span className="text-xl">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </nav>
         <div className="p-4 border-t border-gray-200">
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-            <span>🚪</span> Đăng xuất
+          <button className="w-full flex items-center justify-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+            Đăng xuất
           </button>
         </div>
       </aside>
