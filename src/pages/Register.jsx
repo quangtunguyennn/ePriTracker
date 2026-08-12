@@ -8,17 +8,19 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
-  TrendingUp,
-  ShieldCheck,
-  Zap,
+  User,
+  CheckCircle2
 } from "lucide-react";
 
-export default function Login() {
+export default function Register() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -26,31 +28,31 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setIsLoading(true);
 
     try {
+      // Gọi API đăng ký
       const response = await axios.post(
-        "https://localhost:44338/api/auth/login",
+        "https://localhost:44338/api/auth/register",
         {
+          firstName: firstName,
+          lastName: lastName,
           email: email,
           password: password,
-        },
+        }
       );
 
-      const token = response.data.token;
-      const userRole = response.data.userRole;
+      // Hiển thị thông báo thành công và chuyển hướng về trang login sau 2 giây
+      setSuccess("Account created successfully! Redirecting to login...");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
 
-      localStorage.setItem("token", token);
-
-      if (userRole === "Admin") {
-        navigate("/admin");
-      } else if (userRole === "User") {
-        navigate("/");
-      }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Register error:", err);
       if (err.response && err.response.data) {
-        setError(err.response.data.message || "Incorrect email or password.");
+        setError(err.response.data.message || "Registration failed. Please try again.");
       } else {
         setError("Unable to connect to the server. Please try again later.");
       }
@@ -78,8 +80,11 @@ export default function Login() {
           <span className="text-3xl font-bold tracking-tight">ePriTracker</span>
         </div>
 
-        <div className="font-syne text-4xl text-center">
-          <p>on working ... </p>
+        <div className="font-syne text-4xl text-center relative z-10">
+          <p>Join us today...</p>
+          <p className="text-lg text-slate-400 mt-4 font-urbanist">
+            Start tracking enterprise prices with intelligent automation.
+          </p>
         </div>
 
         <div className="relative z-10 text-sm text-slate-500">
@@ -87,25 +92,76 @@ export default function Login() {
         </div>
       </div>
 
-      {/* 2. Right Section: Login Form */}
+      {/* 2. Right Section: Register Form */}
       <div className="flex-1 flex flex-col justify-center items-center p-8 sm:p-12">
         <div className="w-full max-w-md">
           {/* Header Form */}
-          <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Sign In</h2>
+          <div className="mb-8 text-center lg:text-left">
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">Create an Account</h2>
             <p className="text-slate-500">
-              Welcome back! Please enter your details.
+              Enter your details to get started with ePriTracker.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Error Display */}
+            {/* Error Message */}
             {error && (
               <div className="flex items-center gap-3 p-4 bg-red-50/50 border border-red-200 text-red-600 rounded-xl text-sm animate-in fade-in slide-in-from-top-2 duration-300">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <p>{error}</p>
               </div>
             )}
+
+            {/* Success Message */}
+            {success && (
+              <div className="flex items-center gap-3 p-4 bg-green-50/50 border border-green-200 text-green-600 rounded-xl text-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <p>{success}</p>
+              </div>
+            )}
+
+            {/* Name Inputs (Side by side on desktop) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {/* First Name */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-slate-700">
+                  First Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    className="block w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 outline-none transition-all duration-200"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Last Name */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-slate-700">
+                  Last Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    className="block w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 outline-none transition-all duration-200"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Email Input */}
             <div className="space-y-1.5">
@@ -158,49 +214,30 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Options */}
-            <div className="flex items-center justify-between pt-2">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 text-indigo-600 border-slate-300 rounded cursor-pointer focus:ring-indigo-600 focus:ring-offset-0"
-                />
-                <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
-                  Remember me
-                </span>
-              </label>
-              <Link
-                to="/forgot-password"
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || success !== ""}
               className="relative w-full flex justify-center items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Authenticating...</span>
+                  <span>Creating Account...</span>
                 </>
               ) : (
-                <span>Sign in</span>
+                <span>Sign up</span>
               )}
             </button>
 
-            {/* Register Link (Đã thêm mới ở đây) */}
-            <div className="text-center pt-3">
-              <span className="text-sm text-slate-500">Don't have an account? </span>
+            {/* Login Link */}
+            <div className="text-center pt-2">
+              <span className="text-sm text-slate-500">Already have an account? </span>
               <Link
-                to="/register"
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
+                to="/login"
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
               >
-                Sign up
+                Sign in here
               </Link>
             </div>
           </form>

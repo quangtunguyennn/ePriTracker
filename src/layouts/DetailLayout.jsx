@@ -1,15 +1,17 @@
-// src/layouts/HomeLayout.jsx
+// src/layouts/DetailLayout.jsx
 import { Outlet } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import NavbarProductDetail from "../components/NavbarProductDetail";
 import Footer from "../components/Footer";
-export default function HomeLayout() {
+
+export default function DetailLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+  
       {/* Navbar luôn xuất hiện ở trên cùng của mọi trang dùng layout này */}
-      <Navbar />
+      <NavbarProductDetail />
 
       {/* Vị trí <Outlet /> này sẽ tự động biến thành nội dung của Home hoặc Products */}
-      <main className="flex-grow">
+      <main className="flex-grow container mx-auto px-4 py-8">
         <Outlet />
       </main>
 
