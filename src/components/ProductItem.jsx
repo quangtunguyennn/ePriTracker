@@ -73,7 +73,7 @@ export default function ProductItem({
         <div className="mt-auto pt-2">
           
           {/* Price Tracking Box (Gom nhóm Giá & Thời gian vào 1 khối cho gọn gàng) */}
-          <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3 mb-4">
+          <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3  mb-4">
             <div className="flex items-end justify-between mb-0">
               <div className="mb-2">
                 <span className="text-[12px] uppercase tracking-wider font-questrial font-semibold text-gray-700 block mb-0.5">
