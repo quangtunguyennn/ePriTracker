@@ -1,10 +1,11 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { RefreshCw, Sparkles } from "lucide-react";
+import { RefreshCw, Plus } from "lucide-react";
 
 export default function Detail() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   // Main Product States
   const [product, setProduct] = useState(null);
@@ -15,6 +16,9 @@ export default function Detail() {
   const [suggestions, setSuggestions] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [errorSuggestions, setErrorSuggestions] = useState(null);
+
+  // State quản lý loading của nút Track
+  const [trackingId, setTrackingId] = useState(null);
 
   const BASE_URL = "https://localhost:44338";
 
@@ -80,7 +84,7 @@ export default function Detail() {
     });
   };
 
-  // 🔥 XỬ LÝ LÀM MỚI DANH SÁCH GỢI Ý (FORCE REFRESH)
+  // Làm mới danh sách gợi ý
   const handleRefreshBtn = async () => {
     if (!id || loadingSuggestions) return;
 
@@ -91,7 +95,6 @@ export default function Detail() {
       setLoadingSuggestions(true);
       setErrorSuggestions(null);
 
-      // Gọi API /api/product/refresh-suggestions
       const response = await axios.get(
         `${BASE_URL}/api/product/refresh-suggestions`,
         {
@@ -100,7 +103,6 @@ export default function Detail() {
         },
       );
 
-      // Cập nhật danh sách gợi ý mới thu thập được
       setSuggestions(response.data);
     } catch (err) {
       console.error("Error refreshing suggestions:", err);
@@ -109,6 +111,45 @@ export default function Detail() {
       );
     } finally {
       setLoadingSuggestions(false);
+    }
+  };
+
+  // 🔥 Xử lý khi bấm nút Track
+  const handleTrackProduct = async (suggestion) => {
+    if (!suggestion.productLink) {
+      alert("Cannot track this product: Missing product link.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    try {
+      setTrackingId(suggestion.id);
+
+      // Gọi API POST /api/product/add, gửi string bọc ngoặc kép
+      await axios.post(
+        `${BASE_URL}/api/product/add`,
+        `"${suggestion.productLink}"`,
+        {
+          headers: {
+            ...headers,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      // Thành công thì chuyển hướng về trang Products
+      navigate("/products");
+    } catch (err) {
+      console.error("Error tracking product:", err);
+      // Lấy lỗi từ backend .NET nếu có
+      const errorMsg =
+        err.response?.data?.message ||
+        "Failed to track this product. Please try again.";
+      alert(errorMsg);
+    } finally {
+      setTrackingId(null);
     }
   };
 
@@ -355,7 +396,7 @@ export default function Detail() {
           {/* Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
-              <span className="inline-block  py-1 bg-gray-100 text-gray-600 text-xl font-bold uppercase tracking-widest rounded-full w-max mb-4">
+              <span className="inline-block py-1 bg-gray-100 text-gray-600 text-xl font-bold uppercase tracking-widest rounded-full w-max mb-4">
                 Suggestion Deals
               </span>
               <p className="text-slate-500 text-lg font-syne">
@@ -370,7 +411,7 @@ export default function Detail() {
               className="group mt-4 inline-flex font-questrial text-lg cursor-pointer items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 active:scale-95 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 self-start sm:self-auto"
             >
               <RefreshCw
-                className={`w-4 h-4 text-gray-400  group-hover:text-amber-600 transition-transform duration-500 ${
+                className={`w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-transform duration-500 ${
                   loadingSuggestions
                     ? "animate-spin text-amber-600"
                     : "group-hover:rotate-180"
@@ -453,42 +494,79 @@ export default function Detail() {
                     >
                       {item.price?.toLocaleString("vi-VN")} ₫
                     </p>
-                    <div className="mb-2">
-                      <p className="text-sm font-questrial font-bold text-slate-800">Last updated at -</p>
+                    <div className="mb-4">
+                      <p className="text-sm font-questrial font-bold text-slate-800">
+                        Last updated at -
+                      </p>
                       <p className="text-sm font-extrabold font-urbanist text-slate-600">
+                        {/* Đã sửa thành item.lastUpdatedAt */}
                         {formatDateTime(item.lastUpdatedAt)}
                       </p>
                     </div>
-                    {item.productLink ? (
-                      <a
-                        href={item.productLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center w-full bg-slate-100 text-slate-800 py-3 rounded-xl font-bold text-sm hover:bg-slate-900 hover:text-white active:scale-[0.98] transition-all duration-200"
-                      >
-                        View Offer
-                        <svg
-                          className="w-4 h-4 ml-1.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                          />
-                        </svg>
-                      </a>
-                    ) : (
+
+                    <div className="flex gap-2 mt-6 ">
+                      {/* 🔥 NÚT TRACK ĐƯỢC HOÀN THIỆN */}
                       <button
-                        disabled
-                        className="w-full bg-slate-50 text-slate-400 py-3 rounded-xl font-bold text-sm cursor-not-allowed border border-slate-100"
+                        onClick={() => handleTrackProduct(item)}
+                        disabled={trackingId === item.id}
+                        className="group relative flex-1 inline-flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl font-urbanist font-semibold text-xs tracking-wider uppercase text-slate-100 bg-slate-900 hover:bg-slate-950 border border-slate-800 hover:border-amber-500/50 shadow-[0_1px_3px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_4px_20px_-2px_rgba(245,158,11,0.25)] active:scale-[0.98] transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
                       >
-                        Link Unavailable
+                        {/* Hiệu ứng Vệt sáng Shimmer lướt qua khi Hover */}
+                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+
+                        {trackingId === item.id ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                            <span className="text-slate-300 lowercase font-medium">
+                              Tracking...
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            {/* Tín hiệu Pulse Radar thu nhỏ tinh tế */}
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            </span>
+                            <span className="group-hover:text-amber-300 transition-colors duration-200">
+                              Track 
+                            </span>
+                          </>
+                        )}
                       </button>
-                    )}
+
+                      {/* Nút View Offer */}
+                      {item.productLink ? (
+                        <a
+                          href={item.productLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center bg-slate-100 text-slate-800 py-3 rounded-xl font-bold text-sm hover:bg-slate-900 hover:text-white active:scale-[0.98] transition-all duration-200"
+                        >
+                          View
+                          <svg
+                            className="w-4 h-4 ml-1.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
+                          </svg>
+                        </a>
+                      ) : (
+                        <button
+                          disabled
+                          className="flex-1 bg-slate-50 text-slate-400 py-3 rounded-xl font-bold text-sm cursor-not-allowed border border-slate-100"
+                        >
+                          N/A
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
