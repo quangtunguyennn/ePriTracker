@@ -18,7 +18,8 @@ export default function EventDetail() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
-    const BASE_URL = "https://localhost:44338";
+    // ĐÃ SỬA: Đổi tên biến thành API_BASE_URL để đồng bộ với toàn bộ code bên dưới
+    const API_BASE_URL = "https://localhost:44338";
 
     useEffect(() => {
         const fetchEventProducts = async () => {
@@ -26,9 +27,8 @@ export default function EventDetail() {
                 setLoading(true);
                 const token = localStorage.getItem("token"); // Lấy token
 
-                // CẬP NHẬT LẠI URL: Bỏ đoạn ?userEmail=... đi
-                const response = await axios.get(
-                    `${BASE_URL}/api/Event/getUserProductsInEvent/${eventId}`,
+                // ĐÃ SỬA: Gọi đúng biến API_BASE_URL
+                const response = await axios.get(`${API_BASE_URL}/api/Event/getLiveEventProducts/${eventId}`,
                     { headers: { Authorization: `Bearer ${token}` } } // Gửi kèm token
                 );
 
@@ -64,7 +64,8 @@ export default function EventDetail() {
 
         try {
             const token = localStorage.getItem("token");
-            await axios.delete(`${BASE_URL}/api/product/delete`, {
+            // ĐÃ SỬA: Dùng API_BASE_URL thay cho BASE_URL
+            await axios.delete(`${API_BASE_URL}/api/product/delete`, {
                 params: { id },
                 headers: { Authorization: `Bearer ${token}` },
             });

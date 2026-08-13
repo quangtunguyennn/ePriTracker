@@ -24,7 +24,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-2 text-black bg-neutral-100 p-4 md:flex justify-between items-center pl-8 pr-8 shadow-md">
+    <nav className="sticky top-0 z-11 text-black bg-neutral-100 p-4 md:flex justify-between items-center pl-8 pr-8 shadow-md">
       {/* Logo & Brand */}
       <div className="flex gap-2 justify-start">
         <div className="flex">
@@ -71,7 +71,7 @@ export default function Navbar() {
         </div>
 
         {/* User & Notifications */}
-        <div className="flex gap-4 relative items-center">
+        <div className="flex gap-4 z-11 relative items-center">
           <div>
             <img
               onClick={toggleUserMenu}
