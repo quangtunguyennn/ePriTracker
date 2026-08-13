@@ -529,7 +529,7 @@ export default function Detail() {
                               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                             </span>
                             <span className="group-hover:text-amber-300 transition-colors duration-200">
-                              Track 
+                              Track
                             </span>
                           </>
                         )}
