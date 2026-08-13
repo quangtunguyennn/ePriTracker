@@ -9,13 +9,19 @@ import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import Detail from "./pages/Detail";
 import Register from "./pages/Register";
-
+import EventList from "./pages/EventList";
+import EventDetail from "./pages/EventDetail";
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomeLayout />}>
           <Route index element={<Home />} />
+        </Route>
+
+        <Route path="/events" element={<HomeLayout />}>
+          <Route index element={<EventList />} />
+          <Route path=":eventId" element={<EventDetail />} />
         </Route>
 
         <Route path="/products" element={<ProductLayout />}>
