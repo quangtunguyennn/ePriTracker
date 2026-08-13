@@ -119,7 +119,7 @@ export default function EventList() {
                                                 to={`/events/${evt.eventId}`}
                                                 className="flex-[2] flex justify-center items-center gap-2 px-4 py-2.5 bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white rounded-xl font-questrial font-semibold transition-all shadow-[inset_0px_1px_0px_rgba(255,255,255,0.3),0px_4px_8px_rgba(249,115,22,0.2)] text-sm"
                                             >
-                                                <FontAwesomeIcon icon={faBoxesStacked} /> My Products
+                                                <FontAwesomeIcon /> View Products
                                             </Link>
                                         </div>
                                     </div>

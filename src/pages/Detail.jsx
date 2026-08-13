@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { RefreshCw, Plus } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast"; // 🟢 Import react-hot-toast
 
 export default function Detail() {
   const { id } = useParams();
@@ -17,7 +18,7 @@ export default function Detail() {
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [errorSuggestions, setErrorSuggestions] = useState(null);
 
-  // State quản lý loading của nút Track
+  // State quản lý loading của đúng item đang bấm Track
   const [trackingId, setTrackingId] = useState(null);
 
   const BASE_URL = "https://localhost:44338";
@@ -57,7 +58,7 @@ export default function Detail() {
         setErrorSuggestions(null);
         const response = await axios.get(
           `${BASE_URL}/api/product/suggestion/${id}`,
-          { headers: headers },
+          { headers: headers }
         );
         setSuggestions(response.data);
       } catch (err) {
@@ -100,34 +101,41 @@ export default function Detail() {
         {
           params: { productId: id },
           headers: headers,
-        },
+        }
       );
 
       setSuggestions(response.data);
     } catch (err) {
       console.error("Error refreshing suggestions:", err);
       setErrorSuggestions(
-        "Failed to refresh suggestions. Please try again later.",
+        "Failed to refresh suggestions. Please try again later."
       );
     } finally {
       setLoadingSuggestions(false);
     }
   };
 
-  // 🔥 Xử lý khi bấm nút Track
-  const handleTrackProduct = async (suggestion) => {
+  // 🔥 Xử lý khi bấm nút Track (Chỉ bật loading đúng item & hiện Toast góc phải)
+  const handleTrackProduct = async (suggestion, itemIdentifier) => {
     if (!suggestion.productLink) {
-      alert("Cannot track this product: Missing product link.");
+      toast.error("Cannot track this product: Missing product link.", {
+        position: "top-right",
+      });
       return;
     }
+
+    // Set đúng ID/Identifier của item đang tương tác
+    setTrackingId(itemIdentifier);
+
+    // 🟢 Khởi tạo toast loading bên góc phải
+    const toastId = toast.loading("Adding Product...", {
+      position: "top-right",
+    });
 
     const token = localStorage.getItem("token");
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
-      setTrackingId(suggestion.id);
-
-      // Gọi API POST /api/product/add, gửi string bọc ngoặc kép
       await axios.post(
         `${BASE_URL}/api/product/add`,
         `"${suggestion.productLink}"`,
@@ -136,18 +144,25 @@ export default function Detail() {
             ...headers,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
-      // Thành công thì chuyển hướng về trang Products
-      navigate("/products");
+      // 🟢 Cập nhật Toast thành công
+      toast.success("Added Successfully!", {
+        id: toastId,
+        position: "top-right",
+      });
     } catch (err) {
       console.error("Error tracking product:", err);
-      // Lấy lỗi từ backend .NET nếu có
       const errorMsg =
         err.response?.data?.message ||
         "Failed to track this product. Please try again.";
-      alert(errorMsg);
+
+      // 🔴 Cập nhật Toast báo lỗi
+      toast.error(errorMsg, {
+        id: toastId,
+        position: "top-right",
+      });
     } finally {
       setTrackingId(null);
     }
@@ -155,6 +170,9 @@ export default function Detail() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 py-10 px-4 sm:px-6 lg:px-8 font-syne selection:bg-orange-100 selection:text-orange-900">
+      {/* 🟢 Container hiển thị thông báo Toast ở góc phải trên cùng */}
+      <Toaster position="top-right" reverseOrder={false} />
+
       <div className="max-w-6xl mx-auto space-y-8" id="detail">
         {/* Navigation / Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
@@ -170,7 +188,6 @@ export default function Detail() {
 
         {/* ---------------- 1. MAIN PRODUCT SECTION ---------------- */}
         {loading ? (
-          // SKELETON LOADER
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 animate-pulse">
             <div className="w-40 h-8 bg-slate-100 rounded-full mb-8"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -185,7 +202,6 @@ export default function Detail() {
             </div>
           </div>
         ) : error ? (
-          // ERROR STATE
           <div className="bg-red-50 text-red-600 rounded-3xl p-10 text-center border border-red-100">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
@@ -211,7 +227,6 @@ export default function Detail() {
             </button>
           </div>
         ) : !product ? (
-          // NOT FOUND STATE
           <div className="bg-white rounded-3xl p-16 text-center shadow-sm border border-slate-100">
             <span className="text-6xl mb-4 block">🔍</span>
             <p className="text-2xl text-slate-700 font-bold mb-2">
@@ -223,7 +238,6 @@ export default function Detail() {
           </div>
         ) : (
           <>
-            {/* MAIN INFO CARD */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 lg:p-12">
               <div className="mb-8 flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="flex-1 min-w-0">
@@ -238,7 +252,6 @@ export default function Detail() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
-                {/* Product Image */}
                 <div className="lg:col-span-5 relative w-full aspect-square bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 flex items-center justify-center p-6 group">
                   <img
                     src={product.imageURL || "https://via.placeholder.com/400"}
@@ -247,12 +260,9 @@ export default function Detail() {
                   />
                 </div>
 
-                {/* Product Details & Price Dashboard */}
                 <div className="lg:col-span-7 flex flex-col h-full min-w-0">
-                  {/* Price Box */}
                   <div className="bg-gradient-to-br from-orange-50 to-amber-50/30 border border-orange-100/80 rounded-2xl p-6 md:p-8 mb-8 shadow-[inset_0_1px_4px_rgba(255,255,255,0.5)]">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 pb-6 border-b border-orange-200/50">
-                      {/* Tracked Price (Initial) */}
                       <div className="min-w-0">
                         <span className="text-[11px] text-gray-800 uppercase font-bold tracking-wider mb-1.5 block">
                           Tracked Price
@@ -265,7 +275,6 @@ export default function Detail() {
                         </span>
                       </div>
 
-                      {/* Current Market Price */}
                       {product.latestPrice && (
                         <div className="min-w-0 sm:text-right">
                           <span className="text-[11px] text-orange-600 uppercase font-bold tracking-wider mb-1.5 block">
@@ -281,7 +290,6 @@ export default function Detail() {
                       )}
                     </div>
 
-                    {/* Meta Info (Last Updated) */}
                     <div className="flex flex-wrap items-center justify-between gap-4 text-sm font-medium">
                       <div className="flex items-center gap-2 text-slate-500 font-urbanist font-bold text-lg">
                         <svg
@@ -300,12 +308,11 @@ export default function Detail() {
                         Last updated:{" "}
                         <span className="text-slate-700 font-urbanist font-medium">
                           {formatDateTime(
-                            product.lastUpdatedAt || product.updatedAt,
+                            product.lastUpdatedAt || product.updatedAt
                           )}
                         </span>
                       </div>
 
-                      {/* Optional Product Link */}
                       {product.productLink && (
                         <a
                           href={product.productLink}
@@ -362,7 +369,7 @@ export default function Detail() {
               </div>
 
               {product.description &&
-                typeof product.description === "string" ? (
+              typeof product.description === "string" ? (
                 <div
                   className="prose prose-slate prose-lg max-w-none text-slate-600 font-ggf leading-relaxed marker:text-orange-500"
                   dangerouslySetInnerHTML={{ __html: product.description }}
@@ -393,7 +400,6 @@ export default function Detail() {
 
         {/* ---------------- 3. SUGGESTIONS SECTION ---------------- */}
         <div className="pt-4" id="suggestion">
-          {/* Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <span className="inline-block py-1 bg-gray-100 text-gray-600 text-xl font-bold uppercase tracking-widest rounded-full w-max mb-4">
@@ -404,27 +410,27 @@ export default function Detail() {
               </p>
             </div>
 
-            {/* Refresh Button */}
             <button
               onClick={handleRefreshBtn}
               disabled={loadingSuggestions}
               className="group mt-4 inline-flex font-questrial text-lg cursor-pointer items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 active:scale-95 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 self-start sm:self-auto"
             >
               <RefreshCw
-                className={`w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-transform duration-500 ${loadingSuggestions
+                className={`w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-transform duration-500 ${
+                  loadingSuggestions
                     ? "animate-spin text-amber-600"
                     : "group-hover:rotate-180"
-                  }`}
+                }`}
               />
               <span>
-                {loadingSuggestions ? "Refreshing..." : "Refresh suggestions"}
+                {loadingSuggestions
+                  ? "Refreshing..."
+                  : "Refresh suggestions"}
               </span>
             </button>
           </div>
 
-          {/* Suggestions Content */}
           {loadingSuggestions ? (
-            // SUGGESTIONS SKELETON
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {[...Array(4)].map((_, i) => (
                 <div
@@ -440,12 +446,10 @@ export default function Detail() {
               ))}
             </div>
           ) : errorSuggestions ? (
-            // ERROR STATE
             <div className="bg-red-50 p-8 rounded-3xl font-questrial text-xl border border-red-100 text-center text-red-500 font-medium">
               {errorSuggestions}
             </div>
           ) : suggestions.length === 0 ? (
-            // EMPTY STATE
             <div className="bg-white py-16 px-4 rounded-3xl shadow-sm border border-slate-100 border-dashed text-center">
               <span className="text-5xl mb-4 block">🏷️</span>
               <h3 className="text-xl font-bold text-slate-900 mb-2 font-questrial">
@@ -457,118 +461,121 @@ export default function Detail() {
               </p>
             </div>
           ) : (
-            // SUGGESTIONS GRID
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {suggestions.map((item, index) => (
-                <div
-                  key={item.id || index}
-                  className="group relative bg-white border border-slate-100 p-5 rounded-3xl shadow-sm hover:shadow-xl hover:border-slate-300 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full overflow-hidden"
-                >
-                  {/* Savings Badge */}
-                  {item.savingsAmount > 0 && (
-                    <div className="absolute top-4 left-4 bg-rose-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-full z-10 shadow-sm border border-rose-400">
-                      Save {item.savingsAmount?.toLocaleString("vi-VN")} ₫
-                    </div>
-                  )}
+              {suggestions.map((item, index) => {
+                // Tạo ID định danh duy nhất cho từng card
+                const itemKey = item.id || item.productLink || index;
+                const isItemTracking = trackingId === itemKey;
 
-                  <div className="relative aspect-[4/3] w-full bg-slate-50 rounded-2xl mb-5 p-4 overflow-hidden">
-                    <img
-                      src={item.imageURL || "https://via.placeholder.com/200"}
-                      alt={item.productName || "Product"}
-                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 ease-out"
-                    />
-                  </div>
-
-                  <h3
-                    title={item.productName}
-                    className="font-bold font-questrial text-slate-800 text-base mb-3 line-clamp-2 leading-snug flex-grow group-hover:text-orange-600 transition-colors break-words"
+                return (
+                  <div
+                    key={itemKey}
+                    className="group relative bg-white border border-slate-100 p-5 rounded-3xl shadow-sm hover:shadow-xl hover:border-slate-300 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full overflow-hidden"
                   >
-                    {item.productName}
-                  </h3>
+                    {item.savingsAmount > 0 && (
+                      <div className="absolute top-4 left-4 bg-rose-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-full z-10 shadow-sm border border-rose-400">
+                        Save {item.savingsAmount?.toLocaleString("vi-VN")} ₫
+                      </div>
+                    )}
 
-                  <div className="mt-auto pt-4 border-t border-slate-100">
-                    <p
-                      title={`${item.price} ₫`}
-                      className="text-orange-600 font-questrial font-black text-2xl mb-4 truncate"
-                    >
-                      {item.price?.toLocaleString("vi-VN")} ₫
-                    </p>
-                    <div className="mb-4">
-                      <p className="text-sm font-questrial font-bold text-slate-800">
-                        Last updated at -
-                      </p>
-                      <p className="text-sm font-extrabold font-urbanist text-slate-600">
-                        {/* Đã sửa thành item.lastUpdatedAt */}
-                        {formatDateTime(item.lastUpdatedAt)}
-                      </p>
+                    <div className="relative aspect-[4/3] w-full bg-slate-50 rounded-2xl mb-5 p-4 overflow-hidden">
+                      <img
+                        src={
+                          item.imageURL || "https://via.placeholder.com/200"
+                        }
+                        alt={item.productName || "Product"}
+                        className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 ease-out"
+                      />
                     </div>
 
-                    <div className="flex gap-2 mt-6 ">
-                      {/* 🔥 NÚT TRACK ĐƯỢC HOÀN THIỆN */}
-                      <button
-                        onClick={() => handleTrackProduct(item)}
-                        disabled={trackingId === item.id}
-                        className="group relative flex-1 inline-flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl font-urbanist font-semibold text-xs tracking-wider uppercase text-slate-100 bg-slate-900 hover:bg-slate-950 border border-slate-800 hover:border-amber-500/50 shadow-[0_1px_3px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_4px_20px_-2px_rgba(245,158,11,0.25)] active:scale-[0.98] transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
+                    <h3
+                      title={item.productName}
+                      className="font-bold font-questrial text-slate-800 text-base mb-3 line-clamp-2 leading-snug flex-grow group-hover:text-orange-600 transition-colors break-words"
+                    >
+                      {item.productName}
+                    </h3>
+
+                    <div className="mt-auto pt-4 border-t border-slate-100">
+                      <p
+                        title={`${item.price} ₫`}
+                        className="text-orange-600 font-questrial font-black text-2xl mb-4 truncate"
                       >
-                        {/* Hiệu ứng Vệt sáng Shimmer lướt qua khi Hover */}
-                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+                        {item.price?.toLocaleString("vi-VN")} ₫
+                      </p>
+                      <div className="mb-4">
+                        <p className="text-sm font-questrial font-bold text-slate-800">
+                          Last updated at -
+                        </p>
+                        <p className="text-sm font-extrabold font-urbanist text-slate-600">
+                          {formatDateTime(item.lastUpdatedAt)}
+                        </p>
+                      </div>
 
-                        {trackingId === item.id ? (
-                          <>
-                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                            <span className="text-slate-300 lowercase font-medium">
-                              Tracking...
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            {/* Tín hiệu Pulse Radar thu nhỏ tinh tế */}
-                            <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                            </span>
-                            <span className="group-hover:text-amber-300 transition-colors duration-200">
-                              Track
-                            </span>
-                          </>
-                        )}
-                      </button>
-
-                      {/* Nút View Offer */}
-                      {item.productLink ? (
-                        <a
-                          href={item.productLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center bg-slate-100 text-slate-800 py-3 rounded-xl font-bold text-sm hover:bg-slate-900 hover:text-white active:scale-[0.98] transition-all duration-200"
-                        >
-                          View
-                          <svg
-                            className="w-4 h-4 ml-1.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                            />
-                          </svg>
-                        </a>
-                      ) : (
+                      <div className="flex gap-2 mt-6 ">
+                        {/* 🔥 NÚT TRACK - CHỈ RENDER 'TRACKING...' CHO ĐÚNG ITEM ĐƯỢC CHỌN */}
                         <button
-                          disabled
-                          className="flex-1 bg-slate-50 text-slate-400 py-3 rounded-xl font-bold text-sm cursor-not-allowed border border-slate-100"
+                          onClick={() => handleTrackProduct(item, itemKey)}
+                          disabled={isItemTracking}
+                          className="group relative flex-1 inline-flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl font-urbanist font-semibold text-xs tracking-wider uppercase text-slate-100 bg-slate-900 hover:bg-slate-950 border border-slate-800 hover:border-amber-500/50 shadow-[0_1px_3px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_4px_20px_-2px_rgba(245,158,11,0.25)] active:scale-[0.98] transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
                         >
-                          N/A
+                          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+
+                          {isItemTracking ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                              <span className="text-slate-300 lowercase text-xs font-medium">
+                               TRACKING
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                              </span>
+                              <span className="group-hover:text-amber-300 transition-colors  duration-200">
+                                Track
+                              </span>
+                            </>
+                          )}
                         </button>
-                      )}
+
+                        {/* Nút View Offer */}
+                        {item.productLink ? (
+                          <a
+                            href={item.productLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center bg-slate-100 text-slate-800 py-3 rounded-xl font-bold text-sm hover:bg-slate-900 hover:text-white active:scale-[0.98] transition-all duration-200"
+                          >
+                            View
+                            <svg
+                              className="w-4 h-4 ml-1.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              />
+                            </svg>
+                          </a>
+                        ) : (
+                          <button
+                            disabled
+                            className="flex-1 bg-slate-50 text-slate-400 py-3 rounded-xl font-bold text-sm cursor-not-allowed border border-slate-100"
+                          >
+                            N/A
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
