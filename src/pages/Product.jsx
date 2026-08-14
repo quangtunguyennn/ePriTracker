@@ -98,23 +98,58 @@ export default function Product() {
   };
 
   // Delete product
-  const handleDeleteProduct = async (id) => {
-    // Dùng SweetAlert2 Modal xác nhận thay vì window.confirm
-    const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to delete this product?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#ea580c", // Màu cam phù hợp theme
-      cancelButtonColor: "#9ca3af",
-      confirmButtonText: "Yes, delete it!",
-      customClass: {
-        popup: "rounded-2xl font-syne",
-        confirmButton: "rounded-xl font-bold px-6",
-        cancelButton: "rounded-xl font-bold px-6",
-      },
-    });
+const handleDeleteProduct = async (id) => {
+  const result = await Swal.fire({
+    // Nội dung ngắn gọn, dứt khoát
+    title: "Delete product?",
+    text: "This action cannot be undone.",
+    icon: "warning",
+    iconColor: "#ea580c", // Đồng bộ màu icon với màu thương hiệu (cam)
 
+    showCancelButton: true,
+    confirmButtonText: "Delete",
+    cancelButtonText: "Cancel",
+
+    // QUAN TRỌNG: Tắt toàn bộ style gốc của SweetAlert
+    buttonsStyling: false,
+
+    // UX: Đưa nút Cancel sang trái, mặc định focus vào Cancel
+    reverseButtons: true,
+    focusCancel: true,
+
+    // Hiệu ứng mờ nền (Backdrop Blur) sang trọng
+    backdrop: `
+      rgba(0, 0, 0, 0.4)
+      backdrop-filter
+      backdrop-blur-sm
+    `,
+
+    customClass: {
+      container: "!font-sans",
+
+      // 1. KÉO GIÃN CHIỀU NGANG: Dùng !w-full !max-w-lg (~512px) thay vì !max-w-sm
+      popup: "!rounded-2xl !shadow-2xl !border !border-gray-100 !p-8 !bg-white !w-[2000px] !max-w-lg",
+
+      // Tiêu đề: Đã hạ xuống !text-3xl để cân đối với khung hình rộng
+      title: "!text-3xl !font-semibold !font-questrial !text-gray-900 !p-0 !m-0 !mt-2",
+
+      // 2. SỬA LỖI TEXT: Đưa font-syne và kích thước chữ vào 'htmlContainer'
+      htmlContainer: "!text-base !font-lexend !italic   !text-gray-500 !mt-3 !mb-8 !p-0 !font-normal",
+      text: "!font-3xl",
+      // Vùng chứa nút
+      actions: "!flex !w-full !gap-4 !justify-center !mt-0 !p-0",
+
+      // Nút Delete
+      confirmButton:
+        "!bg-[#ea580c] !font-questrial  !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-lg !px-8 !py-3 !transition-all !shadow-sm !border !border-transparent",
+
+      // Nút Cancel
+      cancelButton:
+        "!bg-white !font-questrial  !font-bold !cursor-pointer hover:!bg-gray-50 !text-gray-700  !rounded-lg !px-8 !py-3 !border !border-gray-200 !transition-all !shadow-sm",
+    },
+  });
+
+  
     if (!result.isConfirmed) return;
 
     try {
