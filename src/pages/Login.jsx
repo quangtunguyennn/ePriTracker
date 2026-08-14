@@ -38,13 +38,21 @@ export default function Login() {
       );
 
       const token = response.data.token;
-      const userRole = response.data.userRole;
+      const userRoles = response.data.userRoles; // Giờ đây là một mảng, VD: ["Admin", "User"]
 
+      // Lưu token vào localStorage
       localStorage.setItem("token", token);
 
-      if (userRole === "Admin") {
+      // 💡 MẸO: Bạn nên lưu thêm userRoles vào localStorage để dùng cho việc ẩn/hiện menu trên giao diện sau này
+      localStorage.setItem("userRoles", JSON.stringify(userRoles));
+
+      // Kiểm tra quyền bằng .includes()
+      if (userRoles?.includes("Admin")) {
         navigate("/admin");
-      } else if (userRole === "User") {
+      } else if (userRoles?.includes("User")) {
+        navigate("/");
+      } else {
+        // Fallback (Trường hợp tài khoản không có role nào)
         navigate("/");
       }
     } catch (err) {
@@ -58,7 +66,6 @@ export default function Login() {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex w-full bg-white font-urbanist">
       {/* 1. Left Section: Branding & Marketing */}
@@ -195,7 +202,9 @@ export default function Login() {
 
             {/* Register Link (Đã thêm mới ở đây) */}
             <div className="text-center pt-3">
-              <span className="text-sm text-slate-500">Don't have an account? </span>
+              <span className="text-sm text-slate-500">
+                Don't have an account?{" "}
+              </span>
               <Link
                 to="/register"
                 className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
