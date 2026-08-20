@@ -10,7 +10,7 @@ export default function Admin() {
 
   // STORE THE FULL STATE FROM THE DATABASE AS AN OBJECT
   // e.g.: { 120547: { eventId: '...', isPublished: true } }
-  const [dbEventsMap, setDbEventsMap] = useState({});
+  // const [dbEventsMap, setDbEventsMap] = useState({});
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard' },
@@ -22,30 +22,30 @@ export default function Admin() {
 
   const getToken = () => localStorage.getItem('token');
 
-  // ADMIN-ONLY API CALL (fetches both hidden and visible events)
-  const fetchDbEvents = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/Event/getAllEventsAdmin`, {
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const map = {};
-        data.forEach(evt => {
-          map[evt.tikiEventId] = { eventId: evt.eventId, isPublished: evt.isPublished };
-        });
-        setDbEventsMap(map);
-      }
-    } catch (error) {
-      console.error('Error fetching DB events:', error);
-    }
-  };
+  // // ADMIN-ONLY API CALL (fetches both hidden and visible events)
+  // const fetchDbEvents = async () => {
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/api/Event/getAllEventsAdmin`, {
+  //       headers: { 'Authorization': `Bearer ${getToken()}` }
+  //     });
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       const map = {};
+  //       data.forEach(evt => {
+  //         map[evt.tikiEventId] = { eventId: evt.eventId, isPublished: evt.isPublished };
+  //       });
+  //       setDbEventsMap(map);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching DB events:', error);
+  //   }
+  // };
 
-  useEffect(() => {
-    if (activeMenu === 'events') {
-      fetchDbEvents();
-    }
-  }, [activeMenu]);
+  // useEffect(() => {
+  //   if (activeMenu === 'events') {
+  //     fetchDbEvents();
+  //   }
+  // }, [activeMenu]);
 
   const handleCrawlEvents = async () => {
     setIsCrawling(true);
@@ -82,23 +82,17 @@ export default function Admin() {
 
       if (response.ok) {
         alert('🎉 Event published successfully!');
-        fetchDbEvents(); // Reload to switch the button to "UNPUBLISH"
+        // GỌI LẠI HÀM CRAWL ĐỂ LẤY EVENT ID MỚI NHẤT
+        handleCrawlEvents();
       } else {
-        // Read the error returned by the backend
-        if (response.status === 403) {
-          alert('Error 403: You do not have permission to publish this event!');
-        } else {
-          const errorData = await response.json();
-          alert(`Error: ${errorData.message}`);
-        }
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
       }
     } catch (error) {
       console.error(error);
-      alert('Network error: Unable to connect to the server while publishing the event!');
     }
   };
 
-  // NEW FUNCTION: HIDE / SHOW EVENT (Toggle Publish)
   const handleTogglePublish = async (eventId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/Event/togglePublish/${eventId}`, {
@@ -107,12 +101,38 @@ export default function Admin() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        // On success, reload the list
-        fetchDbEvents();
+        // CẬP NHẬT TRỰC TIẾP TRÊN RAM, KHÔNG CẦN TẢI LẠI TOÀN BỘ (SIÊU MƯỢT)
+        setPreviewEvents(prev => prev.map(evt =>
+          evt.eventId === eventId ? { ...evt, isPublished: !evt.isPublished } : evt
+        ));
       }
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    // 1. Hiển thị cảnh báo để tránh Admin ấn nhầm
+    const isConfirm = window.confirm("Sự kiện này đã kết thúc trên Tiki. Bạn có chắc chắn muốn xóa nó khỏi hệ thống không?");
+    if (!isConfirm) return;
+
+    try {
+      // 2. Gọi API Xóa
+      const response = await fetch(`${API_BASE_URL}/api/Event/deleteEvent/${eventId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+
+      if (response.ok) {
+        // 3. Nếu xóa thành công, tự động gọi lại hàm Fetch Events để làm mới danh sách (hiệu ứng bốc hơi)
+        handleCrawlEvents();
+      } else {
+        const errorData = await response.json();
+        alert(`Lỗi khi xóa: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Network error: Không thể kết nối đến server!');
     }
   };
 
@@ -196,9 +216,10 @@ export default function Admin() {
                     {previewEvents.map((evt, idx) => {
 
                       // STATUS DISPLAY LOGIC
-                      const dbInfo = dbEventsMap[evt.tikiEventId]; // Get this event's DB info
-                      const isSavedInDb = !!dbInfo; // Has it already been saved to the DB?
-                      const isPublished = isSavedInDb && dbInfo.isPublished; // Is it currently visible?
+                      // const dbInfo = dbEventsMap[evt.tikiEventId]; // Get this event's DB info
+                      const isSavedInDb = evt.eventId && evt.eventId !== "00000000-0000-0000-0000-000000000000";
+                      const isPublished = evt.isPublished === true;
+                      const isExpired = evt.isExpired === true;
 
                       return (
                         <tr key={idx} className="border-b border-slate-700/30 hover:bg-white/5 transition-colors duration-200">
@@ -214,20 +235,25 @@ export default function Admin() {
                             </a>
                           </td>
                           <td className="p-5 text-center">
-                            {/* STATUS DISPLAY */}
-                            {!isSavedInDb && (
+                            {isExpired ? (
+                              <span className="px-3 py-1.5 bg-slate-800/80 border border-slate-600 text-slate-400 rounded-lg text-xs font-bold tracking-wide">EXPIRED</span>
+                            ) : !isSavedInDb ? (
                               <span className="px-3 py-1.5 bg-cyan-900/40 border border-cyan-800 text-cyan-400 rounded-lg text-xs font-bold tracking-wide">PENDING REVIEW</span>
-                            )}
-                            {isSavedInDb && isPublished && (
+                            ) : isPublished ? (
                               <span className="px-3 py-1.5 bg-emerald-900/40 border border-emerald-800 text-emerald-400 rounded-lg text-xs font-bold tracking-wide">LIVE</span>
-                            )}
-                            {isSavedInDb && !isPublished && (
+                            ) : (
                               <span className="px-3 py-1.5 bg-rose-900/40 border border-rose-800 text-rose-400 rounded-lg text-xs font-bold tracking-wide line-through">HIDDEN</span>
                             )}
                           </td>
                           <td className="p-5 text-center">
-                            {/* BUTTON MATCHING THE CURRENT STATUS */}
-                            {!isSavedInDb ? (
+                            {isExpired ? (
+                              <button
+                                onClick={() => handleDeleteEvent(evt.eventId)}
+                                className="px-5 py-2 rounded-lg font-bold text-xs tracking-wider transition-all duration-300 border bg-slate-800/50 text-slate-400 border-slate-600 hover:bg-rose-900/60 hover:text-rose-400 hover:border-rose-800 shadow-sm"
+                              >
+                                DELETE
+                              </button>
+                            ) : !isSavedInDb ? (
                               <button
                                 onClick={() => handlePostEvent(evt)}
                                 className="px-5 py-2 rounded-lg font-bold text-xs tracking-wider transition-all duration-300 border bg-cyan-900/30 text-cyan-400 border-cyan-800 hover:bg-cyan-900/60 hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]"
@@ -236,10 +262,10 @@ export default function Admin() {
                               </button>
                             ) : (
                               <button
-                                onClick={() => handleTogglePublish(dbInfo.eventId)}
+                                onClick={() => handleTogglePublish(evt.eventId)}
                                 className={`px-5 py-2 rounded-lg font-bold text-xs tracking-wider transition-all duration-300 border ${isPublished
-                                  ? 'bg-rose-900/30 text-rose-400 border-rose-800 hover:bg-rose-900/60'
-                                  : 'bg-emerald-900/30 text-emerald-400 border-emerald-800 hover:bg-emerald-900/60'
+                                  ? 'bg-rose-900/30 text-rose-400 border-rose-800 hover:bg-rose-900/60 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)]'
+                                  : 'bg-emerald-900/30 text-emerald-400 border-emerald-800 hover:bg-emerald-900/60 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]'
                                   }`}
                               >
                                 {isPublished ? 'UNPUBLISH' : 'REPUBLISH'}
