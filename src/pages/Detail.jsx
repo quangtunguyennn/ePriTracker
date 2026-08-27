@@ -416,7 +416,7 @@ export default function Detail() {
               className="group mt-4 inline-flex font-questrial text-lg cursor-pointer items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 active:scale-95 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 self-start sm:self-auto"
             >
               <RefreshCw
-                className={`w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-transform duration-500 ${
+                className={`w-6 h-6  text-gray-400 group-hover:text-amber-600 transition-transform duration-500 ${
                   loadingSuggestions
                     ? "animate-spin text-amber-600"
                     : "group-hover:rotate-180"
@@ -425,7 +425,7 @@ export default function Detail() {
               <span>
                 {loadingSuggestions
                   ? "Refreshing..."
-                  : "Refresh suggestions"}
+                  : " Refresh Suggestions Now "}
               </span>
             </button>
           </div>
