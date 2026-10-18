@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
+import { getLiveEventProducts } from "../api/eventApi";
+import { addProduct } from "../api/productApi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
@@ -8,7 +9,6 @@ import {
   faSpinner,
   faBoxOpen,
   faExternalLinkAlt,
-  faPlus,
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
 import toast, { Toaster } from "react-hot-toast";
@@ -22,20 +22,11 @@ export default function EventDetail() {
   // State quản lý hiệu ứng loading cho nút Track của từng sản phẩm
   const [trackingId, setTrackingId] = useState(null);
 
-  const API_BASE_URL = "https://localhost:44338";
-
   useEffect(() => {
     const fetchEventProducts = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
-
-        const response = await axios.get(
-          `${API_BASE_URL}/api/Event/getLiveEventProducts/${eventId}`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
-        setProducts(response.data);
+        setProducts(await getLiveEventProducts(eventId));
       } catch (error) {
         console.error("Error loading event products:", error);
         toast.error("Failed to load products for this event.");
@@ -56,15 +47,9 @@ export default function EventDetail() {
 
     setTrackingId(productId);
     const toastId = toast.loading("Adding Product to tracking list...");
-    const token = localStorage.getItem("token");
 
     try {
-      await axios.post(`${API_BASE_URL}/api/product/add`, `"${productLink}"`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      await addProduct(productLink);
 
       toast.success("Product tracked successfully!", { id: toastId });
     } catch (error) {

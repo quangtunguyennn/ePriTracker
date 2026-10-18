@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
+import { getPublishedEvents } from "../api/eventApi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faMagnifyingGlass,
     faSpinner,
     faCalendarAlt,
-    faArrowUpRightFromSquare,
-    faBoxesStacked
+    faArrowUpRightFromSquare
 } from "@fortawesome/free-solid-svg-icons";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -16,18 +15,11 @@ export default function EventList() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
-    const BASE_URL = "https://localhost:44338";
-
     useEffect(() => {
         const fetchEvents = async () => {
             try {
                 setLoading(true);
-                // Nếu API Event không yêu cầu token thì có thể bỏ header Authorization
-                const token = localStorage.getItem("token");
-                const response = await axios.get(`${BASE_URL}/api/Event/getPublishedEvents`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                });
-                setEvents(response.data);
+                setEvents(await getPublishedEvents());
             } catch (error) {
                 console.error("Error loading events:", error);
                 toast.error("Failed to load events.");

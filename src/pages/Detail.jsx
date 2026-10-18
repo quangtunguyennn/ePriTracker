@@ -1,12 +1,16 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { RefreshCw, Plus } from "lucide-react";
+import {
+  addProduct,
+  getProduct,
+  getSuggestions,
+  refreshSuggestions,
+} from "../api/productApi";
+import { RefreshCw } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast"; // 🟢 Import react-hot-toast
 
 export default function Detail() {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   // Main Product States
   const [product, setProduct] = useState(null);
@@ -21,8 +25,6 @@ export default function Detail() {
   // State quản lý loading của đúng item đang bấm Track
   const [trackingId, setTrackingId] = useState(null);
 
-  const BASE_URL = "https://localhost:44338";
-
   // Instant scroll to top on mount
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -32,18 +34,11 @@ export default function Detail() {
   useEffect(() => {
     if (!id) return;
 
-    const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
     const fetchProductDetail = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get(`${BASE_URL}/product`, {
-          params: { id: id },
-          headers: headers,
-        });
-        setProduct(response.data);
+        setProduct(await getProduct(id));
       } catch (err) {
         console.error("Error fetching product details:", err);
         setError("Cannot load product information. Please try again!");
@@ -56,11 +51,7 @@ export default function Detail() {
       try {
         setLoadingSuggestions(true);
         setErrorSuggestions(null);
-        const response = await axios.get(
-          `${BASE_URL}/api/product/suggestion/${id}`,
-          { headers: headers }
-        );
-        setSuggestions(response.data);
+        setSuggestions(await getSuggestions(id));
       } catch (err) {
         console.error("Error fetching suggestions:", err);
         setErrorSuggestions("Cannot load recommended products.");
@@ -89,22 +80,11 @@ export default function Detail() {
   const handleRefreshBtn = async () => {
     if (!id || loadingSuggestions) return;
 
-    const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
     try {
       setLoadingSuggestions(true);
       setErrorSuggestions(null);
 
-      const response = await axios.get(
-        `${BASE_URL}/api/product/refresh-suggestions`,
-        {
-          params: { productId: id },
-          headers: headers,
-        }
-      );
-
-      setSuggestions(response.data);
+      setSuggestions(await refreshSuggestions(id));
     } catch (err) {
       console.error("Error refreshing suggestions:", err);
       setErrorSuggestions(
@@ -132,20 +112,8 @@ export default function Detail() {
       position: "top-right",
     });
 
-    const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
     try {
-      await axios.post(
-        `${BASE_URL}/api/product/add`,
-        `"${suggestion.productLink}"`,
-        {
-          headers: {
-            ...headers,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await addProduct(suggestion.productLink);
 
       // 🟢 Cập nhật Toast thành công
       toast.success("Added Successfully!", {

@@ -8,7 +8,7 @@ import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 
 import { faStrava } from "@fortawesome/free-brands-svg-icons";
 
-export default function () {
+export default function Footer() {
   return (
     <>
       <div className="bg-black flex gap-20 pl-40 pr-40 pt-20 text-white">
