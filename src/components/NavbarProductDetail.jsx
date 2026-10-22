@@ -39,11 +39,28 @@ export default function NavbarProductDetail() {
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
           </button>
 
+           <button
+            onClick={() => scrollToSection("pricechart")}
+            className={navItemClass}
+          >
+            Price Chart
+            <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
+          </button>
+
           <button
             onClick={() => scrollToSection("description")}
             className={navItemClass}
           >
             Product Description
+            <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
+          </button>
+
+          
+          <button
+            onClick={() => scrollToSection("video-reviews")}
+            className={navItemClass}
+          >
+            Video Reviews
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
           </button>
 

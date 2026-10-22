@@ -143,7 +143,7 @@ const handleDeleteProduct = async (id) => {
       confirmButton:
         "!bg-[#ea580c] !font-questrial  !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-lg !px-8 !py-3 !transition-all !shadow-sm !border !border-transparent",
 
-      // Nút Cancel
+      // Nút Cancel4 
       cancelButton:
         "!bg-white !font-questrial  !font-bold !cursor-pointer hover:!bg-gray-50 !text-gray-700  !rounded-lg !px-8 !py-3 !border !border-gray-200 !transition-all !shadow-sm",
     },

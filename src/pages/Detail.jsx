@@ -1,8 +1,17 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { RefreshCw, Plus } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast"; // 🟢 Import react-hot-toast
+import { RefreshCw, Plus, TrendingUp } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+} from "recharts";
 
 export default function Detail() {
   const { id } = useParams();
@@ -13,10 +22,20 @@ export default function Detail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Price History States
+  const [priceHistory, setPriceHistory] = useState(null);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [historyDays, setHistoryDays] = useState(30);
+
   // Suggestions States
   const [suggestions, setSuggestions] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [errorSuggestions, setErrorSuggestions] = useState(null);
+
+  // Video Reviews States
+  const [videoReviews, setVideoReviews] = useState([]);
+  const [loadingVideos, setLoadingVideos] = useState(true);
+  const [errorVideos, setErrorVideos] = useState(null);
 
   // State quản lý loading của đúng item đang bấm Track
   const [trackingId, setTrackingId] = useState(null);
@@ -28,7 +47,7 @@ export default function Detail() {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
 
-  // Fetch Data
+  // Fetch Product Data & Suggestions
   useEffect(() => {
     if (!id) return;
 
@@ -58,7 +77,7 @@ export default function Detail() {
         setErrorSuggestions(null);
         const response = await axios.get(
           `${BASE_URL}/api/product/suggestion/${id}`,
-          { headers: headers }
+          { headers: headers },
         );
         setSuggestions(response.data);
       } catch (err) {
@@ -73,6 +92,60 @@ export default function Detail() {
     fetchSuggestions();
   }, [id]);
 
+  // Fetch Price History
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchPriceHistory = async () => {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      try {
+        setLoadingHistory(true);
+        const response = await axios.get(
+          `${BASE_URL}/api/products/${id}/price-history`,
+          {
+            params: { days: historyDays },
+            headers: headers,
+          },
+        );
+        setPriceHistory(response.data);
+      } catch (err) {
+        console.error("Error fetching price history:", err);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    fetchPriceHistory();
+  }, [id, historyDays]);
+
+  // Fetch Video Reviews
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchVideoReviews = async () => {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      try {
+        setLoadingVideos(true);
+        const response = await axios.get(
+          `${BASE_URL}/api/product/${id}/reviews`,
+          { headers }
+        );
+        setVideoReviews(response.data);
+      } catch (err) {
+        console.error("Error fetching video reviews:", err);
+        setErrorVideos("Cannot load video reviews.");
+      } finally {
+        setLoadingVideos(false);
+      }
+    };
+
+    fetchVideoReviews();
+  }, [id]);
+
   // Format Date Helper
   const formatDateTime = (dateString) => {
     if (!dateString) return "Recently";
@@ -83,6 +156,29 @@ export default function Detail() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // Format cho trục X của biểu đồ (chỉ hiện Ngày/Tháng)
+  const formatChartDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.getDate()}/${date.getMonth() + 1}`;
+  };
+
+  // Custom Tooltip cho Biểu đồ
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-4 border border-slate-100 shadow-xl rounded-xl">
+          <p className="text-slate-500 text-sm mb-1">
+            {new Date(label).toLocaleDateString("vi-VN")}
+          </p>
+          <p className="text-orange-600 font-bold text-lg">
+            {payload[0].value.toLocaleString("vi-VN")} ₫
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   // Làm mới danh sách gợi ý
@@ -101,21 +197,21 @@ export default function Detail() {
         {
           params: { productId: id },
           headers: headers,
-        }
+        },
       );
 
       setSuggestions(response.data);
     } catch (err) {
       console.error("Error refreshing suggestions:", err);
       setErrorSuggestions(
-        "Failed to refresh suggestions. Please try again later."
+        "Failed to refresh suggestions. Please try again later.",
       );
     } finally {
       setLoadingSuggestions(false);
     }
   };
 
-  // 🔥 Xử lý khi bấm nút Track (Chỉ bật loading đúng item & hiện Toast góc phải)
+  // Xử lý khi bấm nút Track
   const handleTrackProduct = async (suggestion, itemIdentifier) => {
     if (!suggestion.productLink) {
       toast.error("Cannot track this product: Missing product link.", {
@@ -124,10 +220,7 @@ export default function Detail() {
       return;
     }
 
-    // Set đúng ID/Identifier của item đang tương tác
     setTrackingId(itemIdentifier);
-
-    // 🟢 Khởi tạo toast loading bên góc phải
     const toastId = toast.loading("Adding Product...", {
       position: "top-right",
     });
@@ -144,10 +237,9 @@ export default function Detail() {
             ...headers,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
-      // 🟢 Cập nhật Toast thành công
       toast.success("Added Successfully!", {
         id: toastId,
         position: "top-right",
@@ -158,7 +250,6 @@ export default function Detail() {
         err.response?.data?.message ||
         "Failed to track this product. Please try again.";
 
-      // 🔴 Cập nhật Toast báo lỗi
       toast.error(errorMsg, {
         id: toastId,
         position: "top-right",
@@ -170,7 +261,6 @@ export default function Detail() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 py-10 px-4 sm:px-6 lg:px-8 font-syne selection:bg-orange-100 selection:text-orange-900">
-      {/* 🟢 Container hiển thị thông báo Toast ở góc phải trên cùng */}
       <Toaster position="top-right" reverseOrder={false} />
 
       <div className="max-w-6xl mx-auto space-y-8" id="detail">
@@ -186,7 +276,7 @@ export default function Detail() {
           <span className="text-slate-900">Product Detail</span>
         </div>
 
-        {/* ---------------- 1. MAIN PRODUCT SECTION ---------------- */}
+        {/* 1. MAIN PRODUCT SECTION */}
         {loading ? (
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 animate-pulse">
             <div className="w-40 h-8 bg-slate-100 rounded-full mb-8"></div>
@@ -308,7 +398,7 @@ export default function Detail() {
                         Last updated:{" "}
                         <span className="text-slate-700 font-urbanist font-medium">
                           {formatDateTime(
-                            product.lastUpdatedAt || product.updatedAt
+                            product.lastUpdatedAt || product.updatedAt,
                           )}
                         </span>
                       </div>
@@ -341,10 +431,154 @@ export default function Detail() {
                 </div>
               </div>
             </div>
+            {/* 2.5 PRICE HISTORY SECTION */}
+            {!loadingHistory &&
+              priceHistory &&
+              priceHistory.points &&
+              priceHistory.points.length > 0 && (
+                <div
+                  className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 mt-8"
+                  id="pricechart"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-slate-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M4 6h16M4 12h16M4 18h7"
+                          />
+                        </svg>
+                      </div>
+                      <h2 className="text-2xl font-bold text-slate-900 font-questrial">
+                        Price History
+                      </h2>
+                    </div>
 
-            {/* ---------------- 2. DESCRIPTION SECTION ---------------- */}
+                    <div className="flex items-center bg-slate-50 p-1 rounded-lg border border-slate-100">
+                      {[7, 30, 90].map((days) => (
+                        <button
+                          key={days}
+                          onClick={() => setHistoryDays(days)}
+                          className={`px-4 py-1.5 rounded-md text-sm font-questrial font-semibold transition-all duration-200 ${
+                            historyDays === days
+                              ? "bg-white text-slate-900 shadow-sm"
+                              : "text-slate-500 hover:text-slate-700"
+                          }`}
+                        >
+                          {days} Days
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                      <p className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">
+                        Current Price
+                      </p>
+                      <p className="text-2xl font-black text-slate-900 font-questrial">
+                        {priceHistory.currentPrice?.toLocaleString("vi-VN")} ₫
+                      </p>
+                    </div>
+                    <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-100">
+                      <p className="text-emerald-700 text-sm font-bold uppercase tracking-wider mb-1">
+                        Lowest Price
+                      </p>
+                      <p className="text-2xl font-black text-emerald-700 font-questrial">
+                        {priceHistory.lowestPrice?.toLocaleString("vi-VN")} ₫
+                      </p>
+                    </div>
+                    <div className="p-5 rounded-2xl bg-rose-50 border border-rose-100">
+                      <p className="text-rose-700 text-sm font-bold uppercase tracking-wider mb-1">
+                        Highest Price
+                      </p>
+                      <p className="text-2xl font-black text-rose-700 font-questrial">
+                        {priceHistory.highestPrice?.toLocaleString("vi-VN")} ₫
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="h-[350px] w-full mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={priceHistory.points}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient
+                            id="colorPrice"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#f97316"
+                              stopOpacity={0.2}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#f97316"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="#f1f5f9"
+                        />
+                        <XAxis
+                          dataKey="checkedAt"
+                          tickFormatter={formatChartDate}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "#94a3b8", fontSize: 12 }}
+                          dy={10}
+                        />
+                        <YAxis
+                          domain={["dataMin - 100000", "dataMax + 100000"]}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "#94a3b8", fontSize: 12 }}
+                          tickFormatter={(value) =>
+                            `${(value / 1000000).toFixed(1)}M`
+                          }
+                          dx={-10}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Area
+                          type="monotone"
+                          dataKey="price"
+                          stroke="#f97316"
+                          strokeWidth={3}
+                          fillOpacity={1}
+                          fill="url(#colorPrice)"
+                          activeDot={{
+                            r: 6,
+                            fill: "#f97316",
+                            stroke: "#fff",
+                            strokeWidth: 2,
+                          }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+            {/* 2. DESCRIPTION SECTION */}
             <div
-              className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10"
+              className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 mt-8"
               id="description"
             >
               <div className="flex items-center gap-3 mb-8">
@@ -395,10 +629,74 @@ export default function Detail() {
                 </div>
               )}
             </div>
+
+            {/* 2.5 VIDEO REVIEWS SECTION */}
+            <div
+              className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 mt-8"
+              id="video-reviews"
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-rose-600"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 font-questrial">
+                  Video Reviews
+                </h2>
+              </div>
+
+              {loadingVideos ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="animate-pulse flex flex-col gap-3">
+                      <div className="bg-slate-100 aspect-video rounded-xl w-full"></div>
+                      <div className="bg-slate-100 h-4 rounded w-3/4"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : errorVideos ? (
+                <div className="bg-red-50 p-6 rounded-2xl text-center text-red-500 font-medium">
+                  {errorVideos}
+                </div>
+              ) : videoReviews && videoReviews.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {videoReviews.map((video) => (
+                    <div key={video.videoId} className="flex flex-col gap-3 group">
+                      <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm  border border-slate-100 bg-black">
+                        <iframe
+                          src={video.embedUrl}
+                          title={video.title}
+                          className="absolute top-0 left-0 w-full h-full"
+                          allowFullScreen
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        ></iframe>
+                      </div>
+                      <h3
+                        className="font-semibold text-slate-800 line-clamp-2 font-questrial text-lg leading-snug group-hover:text-rose-600 transition-colors"
+                        title={video.title}
+                      >
+                        {video.title}
+                      </h3>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-50 rounded-2xl text-center py-12 border border-slate-100 border-dashed">
+                  <p className="text-slate-500 font-medium">
+                    No video reviews found for this product.
+                  </p>
+                </div>
+              )}
+            </div>
           </>
         )}
 
-        {/* ---------------- 3. SUGGESTIONS SECTION ---------------- */}
+        {/* 3. SUGGESTIONS SECTION */}
         <div className="pt-4" id="suggestion">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
@@ -416,7 +714,7 @@ export default function Detail() {
               className="group mt-4 inline-flex font-questrial text-lg cursor-pointer items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 active:scale-95 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 self-start sm:self-auto"
             >
               <RefreshCw
-                className={`w-6 h-6  text-gray-400 group-hover:text-amber-600 transition-transform duration-500 ${
+                className={`w-6 h-6 text-gray-400 group-hover:text-amber-600 transition-transform duration-500 ${
                   loadingSuggestions
                     ? "animate-spin text-amber-600"
                     : "group-hover:rotate-180"
@@ -463,7 +761,6 @@ export default function Detail() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {suggestions.map((item, index) => {
-                // Tạo ID định danh duy nhất cho từng card
                 const itemKey = item.id || item.productLink || index;
                 const isItemTracking = trackingId === itemKey;
 
@@ -480,9 +777,7 @@ export default function Detail() {
 
                     <div className="relative aspect-[4/3] w-full bg-slate-50 rounded-2xl mb-5 p-4 overflow-hidden">
                       <img
-                        src={
-                          item.imageURL || "https://via.placeholder.com/200"
-                        }
+                        src={item.imageURL || "https://via.placeholder.com/200"}
                         alt={item.productName || "Product"}
                         className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 ease-out"
                       />
@@ -511,8 +806,7 @@ export default function Detail() {
                         </p>
                       </div>
 
-                      <div className="flex gap-2 mt-6 ">
-                        {/* 🔥 NÚT TRACK - CHỈ RENDER 'TRACKING...' CHO ĐÚNG ITEM ĐƯỢC CHỌN */}
+                      <div className="flex gap-2 mt-6">
                         <button
                           onClick={() => handleTrackProduct(item, itemKey)}
                           disabled={isItemTracking}
@@ -524,7 +818,7 @@ export default function Detail() {
                             <>
                               <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
                               <span className="text-slate-300 lowercase text-xs font-medium">
-                               TRACKING
+                                TRACKING
                               </span>
                             </>
                           ) : (
@@ -533,14 +827,13 @@ export default function Detail() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                               </span>
-                              <span className="group-hover:text-amber-300 transition-colors  duration-200">
+                              <span className="group-hover:text-amber-300 transition-colors duration-200">
                                 Track
                               </span>
                             </>
                           )}
                         </button>
 
-                        {/* Nút View Offer */}
                         {item.productLink ? (
                           <a
                             href={item.productLink}
