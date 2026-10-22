@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { addProduct, deleteProduct, getTrackedProducts } from "../api/productApi";
+import { getPlatformFromUrl } from "../utils/platform";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSortDown,
@@ -380,16 +381,19 @@ const handleDeleteProduct = async (id) => {
                     initialPrice={
                       item.initialPrice
                         ? `${item.initialPrice.toLocaleString("vi-VN")} ₫`
-                        : "0 ₫"
+                        : "No price yet"
                     }
                     latestPrice={
                       item.latestPrice
                         ? `${item.latestPrice.toLocaleString("vi-VN")} ₫`
-                        : "0 ₫"
+                        : "No price yet"
                     }
                     // 👇 Truyền thêm 2 dữ liệu mới vào đây 👇
                     productLink={item.productLink}
                     lastUpdatedAt={item.lastUpdatedAt}
+                    platform={getPlatformFromUrl(item.productLink)}
+                    isInStock={item.isInStock !== false}
+                    outOfStockSince={item.outOfStockSince}
                     onDelete={() => handleDeleteProduct(item.productId)}
                   />
                 </div>

@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import PlatformBadge from "./PlatformBadge";
+import StockBadge from "./StockBadge";
 
 export default function ProductItem({
   productId,
@@ -10,6 +12,9 @@ export default function ProductItem({
   latestPrice,
   productLink,
   lastUpdatedAt,
+  platform,
+  isInStock = true,
+  outOfStockSince,
   onDelete,
 }) {
   // Format date cleanly for English Enterprise standard (e.g., "Aug 11, 2026, 10:19 PM")
@@ -41,13 +46,20 @@ export default function ProductItem({
           />
         </Link>
 
-        {/* Live Status Badge */}
+        {/* Live Status Badge – hết hàng thì hiện nhãn hết hàng (vẫn tiếp tục theo dõi) */}
         <div className="absolute top-3 left-3 z-10">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-[12px] font-medium font-syne text-white shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Tracking
-          </span>
+          {isInStock ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-[12px] font-medium font-syne text-white shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Tracking
+            </span>
+          ) : (
+            <StockBadge isInStock={false} outOfStockSince={outOfStockSince} compact />
+          )}
         </div>
+
+        {/* Sàn bán */}
+        <PlatformBadge platform={platform} className="absolute top-3 right-3 z-10 shadow-sm" />
       </div>
 
       {/* 2. PRODUCT DETAILS */}
@@ -87,7 +99,7 @@ export default function ProductItem({
             </div>
             <div className="border-t border-slate-200/60 pt-2 pb-2">
                 <span className="text-[15px] font-questrial font-bold uppercase tracking-wider text-amber-600 block mb-0.5">
-                  Latest Price
+                  {isInStock ? "Latest Price" : "Last Known Price"}
                 </span>
                 <span className="font-black font-questrial text-2xl text-orange-600">
                   {latestPrice}
