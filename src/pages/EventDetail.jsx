@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
+import { getLiveEventProducts, getPublishedEvents } from "../api/eventApi";
+import PlatformBadge from "../components/PlatformBadge";
+import { getEventEndLabel } from "../utils/eventTime";
+import { addProduct } from "../api/productApi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
@@ -8,7 +11,6 @@ import {
   faSpinner,
   faBoxOpen,
   faExternalLinkAlt,
-  faPlus,
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
 import toast, { Toaster } from "react-hot-toast";
@@ -16,26 +18,18 @@ import toast, { Toaster } from "react-hot-toast";
 export default function EventDetail() {
   const { eventId } = useParams();
   const [products, setProducts] = useState([]);
+  const [event, setEvent] = useState(null); // tên, sàn, giờ kết thúc – lấy từ danh sách sự kiện
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   // State quản lý hiệu ứng loading cho nút Track của từng sản phẩm
   const [trackingId, setTrackingId] = useState(null);
 
-  const API_BASE_URL = "https://localhost:44338";
-
   useEffect(() => {
     const fetchEventProducts = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
-
-        const response = await axios.get(
-          `${API_BASE_URL}/api/Event/getLiveEventProducts/${eventId}`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
-        setProducts(response.data);
+        setProducts(await getLiveEventProducts(eventId));
       } catch (error) {
         console.error("Error loading event products:", error);
         toast.error("Failed to load products for this event.");
@@ -44,8 +38,21 @@ export default function EventDetail() {
       }
     };
 
+    // Thông tin sự kiện chỉ để hiển thị – lỗi thì vẫn xem được sản phẩm
+    const fetchEventInfo = async () => {
+      try {
+        const events = await getPublishedEvents();
+        setEvent(events.find((e) => e.eventId === eventId) ?? null);
+      } catch (error) {
+        console.error("Error loading event info:", error);
+      }
+    };
+
     fetchEventProducts();
+    fetchEventInfo();
   }, [eventId]);
+
+  const endLabel = getEventEndLabel(event);
 
   // Xử lý khi bấm nút Track
   const handleTrackProduct = async (productLink, productId) => {
@@ -56,15 +63,9 @@ export default function EventDetail() {
 
     setTrackingId(productId);
     const toastId = toast.loading("Adding Product to tracking list...");
-    const token = localStorage.getItem("token");
 
     try {
-      await axios.post(`${API_BASE_URL}/api/product/add`, `"${productLink}"`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      await addProduct(productLink);
 
       toast.success("Product tracked successfully!", { id: toastId });
     } catch (error) {
@@ -103,12 +104,20 @@ export default function EventDetail() {
 
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div className="max-w-2xl w-full">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest rounded-full mb-3 border border-emerald-200/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Live Event
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest rounded-full border border-emerald-200/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Live Event
+                </div>
+                <PlatformBadge platform={event?.platform} />
+                {endLabel && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200 text-xs font-bold font-questrial">
+                    {endLabel}
+                  </span>
+                )}
               </div>
               <h1 className="font-urbanist md:text-4xl text-3xl font-black text-slate-900 mb-2 tracking-tight">
-                Event Products
+                {event?.title || "Event Products"}
               </h1>
               <p className="text-slate-500 font-ggf text-sm md:text-base">
                 Explore and track products participating in this specific event.
@@ -223,6 +232,13 @@ export default function EventDetail() {
                     >
                       {item.productName}
                     </h3>
+
+                    {/* Ghi chú của sàn, vd flash sale CellphoneS: "Đã bán 1/10 suất" */}
+                    {item.desc && (
+                      <p className="text-xs font-semibold text-red-600 font-questrial mb-2">
+                        {item.desc}
+                      </p>
+                    )}
 
                     {/* Khu vực Giá & Hành động */}
                     <div className="mt-auto pt-4 border-t border-slate-100">

@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { Link } from "react-router-dom";
+import { addProduct, deleteProduct, getTrackedProducts } from "../api/productApi";
+import { getPlatformFromUrl } from "../utils/platform";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faJira } from "@fortawesome/free-brands-svg-icons/faJira";
 import {
   faSortDown,
   faSortUp,
@@ -26,18 +25,11 @@ export default function Product() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Backend BASE URL
-  const BASE_URL = "https://localhost:44338";
-
   // 2. Fetch product list
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/api/product/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProducts(response.data);
+      setProducts(await getTrackedProducts());
     } catch (error) {
       console.error("Error loading product list:", error);
       toast.error("Failed to load products.");
@@ -63,15 +55,7 @@ export default function Product() {
 
     try {
       setIsSubmitting(true);
-      const token = localStorage.getItem("token");
-      const endpoint = `${BASE_URL}/api/product/add`;
-
-      await axios.post(endpoint, JSON.stringify(linkProduct), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      await addProduct(linkProduct);
 
       // Cập nhật toast thành thành công
       toast.success("Product added successfully!", {
@@ -153,11 +137,7 @@ const handleDeleteProduct = async (id) => {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`${BASE_URL}/api/product/delete`, {
-        params: { id },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await deleteProduct(id);
       setProducts((prev) => prev.filter((p) => p.productId !== id)); // Optimistic UI update
       toast.success("Product deleted successfully!");
     } catch (error) {
@@ -401,16 +381,19 @@ const handleDeleteProduct = async (id) => {
                     initialPrice={
                       item.initialPrice
                         ? `${item.initialPrice.toLocaleString("vi-VN")} ₫`
-                        : "0 ₫"
+                        : "No price yet"
                     }
                     latestPrice={
                       item.latestPrice
                         ? `${item.latestPrice.toLocaleString("vi-VN")} ₫`
-                        : "0 ₫"
+                        : "No price yet"
                     }
                     // 👇 Truyền thêm 2 dữ liệu mới vào đây 👇
                     productLink={item.productLink}
                     lastUpdatedAt={item.lastUpdatedAt}
+                    platform={getPlatformFromUrl(item.productLink)}
+                    isInStock={item.isInStock !== false}
+                    outOfStockSince={item.outOfStockSince}
                     onDelete={() => handleDeleteProduct(item.productId)}
                   />
                 </div>

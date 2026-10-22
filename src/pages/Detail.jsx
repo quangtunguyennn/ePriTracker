@@ -1,12 +1,19 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { RefreshCw, Plus } from "lucide-react";
+import {
+  addProduct,
+  getProduct,
+  getSuggestions,
+  refreshSuggestions,
+} from "../api/productApi";
+import { RefreshCw } from "lucide-react";
+import PlatformBadge from "../components/PlatformBadge";
+import StockBadge from "../components/StockBadge";
+import { getPlatformFromUrl } from "../utils/platform";
 import toast, { Toaster } from "react-hot-toast"; // 🟢 Import react-hot-toast
 
 export default function Detail() {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   // Main Product States
   const [product, setProduct] = useState(null);
@@ -21,8 +28,6 @@ export default function Detail() {
   // State quản lý loading của đúng item đang bấm Track
   const [trackingId, setTrackingId] = useState(null);
 
-  const BASE_URL = "https://localhost:44338";
-
   // Instant scroll to top on mount
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -32,18 +37,11 @@ export default function Detail() {
   useEffect(() => {
     if (!id) return;
 
-    const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
     const fetchProductDetail = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get(`${BASE_URL}/product`, {
-          params: { id: id },
-          headers: headers,
-        });
-        setProduct(response.data);
+        setProduct(await getProduct(id));
       } catch (err) {
         console.error("Error fetching product details:", err);
         setError("Cannot load product information. Please try again!");
@@ -56,11 +54,7 @@ export default function Detail() {
       try {
         setLoadingSuggestions(true);
         setErrorSuggestions(null);
-        const response = await axios.get(
-          `${BASE_URL}/api/product/suggestion/${id}`,
-          { headers: headers }
-        );
-        setSuggestions(response.data);
+        setSuggestions(await getSuggestions(id));
       } catch (err) {
         console.error("Error fetching suggestions:", err);
         setErrorSuggestions("Cannot load recommended products.");
@@ -72,6 +66,10 @@ export default function Detail() {
     fetchProductDetail();
     fetchSuggestions();
   }, [id]);
+
+  // Giá 0 = sàn chưa có giá (sản phẩm ngừng bán / hết hàng lúc thêm)
+  const formatPrice = (price) =>
+    price > 0 ? `${price.toLocaleString("vi-VN")} ₫` : "No price yet";
 
   // Format Date Helper
   const formatDateTime = (dateString) => {
@@ -89,22 +87,11 @@ export default function Detail() {
   const handleRefreshBtn = async () => {
     if (!id || loadingSuggestions) return;
 
-    const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
     try {
       setLoadingSuggestions(true);
       setErrorSuggestions(null);
 
-      const response = await axios.get(
-        `${BASE_URL}/api/product/refresh-suggestions`,
-        {
-          params: { productId: id },
-          headers: headers,
-        }
-      );
-
-      setSuggestions(response.data);
+      setSuggestions(await refreshSuggestions(id));
     } catch (err) {
       console.error("Error refreshing suggestions:", err);
       setErrorSuggestions(
@@ -132,20 +119,8 @@ export default function Detail() {
       position: "top-right",
     });
 
-    const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
     try {
-      await axios.post(
-        `${BASE_URL}/api/product/add`,
-        `"${suggestion.productLink}"`,
-        {
-          headers: {
-            ...headers,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await addProduct(suggestion.productLink);
 
       // 🟢 Cập nhật Toast thành công
       toast.success("Added Successfully!", {
@@ -241,10 +216,14 @@ export default function Detail() {
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 lg:p-12">
               <div className="mb-8 flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="flex-1 min-w-0">
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest rounded-full w-max mb-4 border border-emerald-200/60">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Product Detail
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest rounded-full w-max border border-emerald-200/60">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Product Detail
+                    </span>
+                    <PlatformBadge platform={getPlatformFromUrl(product.productLink)} />
+                    <StockBadge isInStock={product.isInStock} outOfStockSince={product.outOfStockSince} />
+                  </div>
                   <h1 className="font-questrial text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-slate-900 break-words">
                     {product.productName}
                   </h1>
@@ -271,14 +250,15 @@ export default function Detail() {
                           title={`${product.initialPrice} ₫`}
                           className="text-2xl text-slate-400 font-bold font-questrial block truncate"
                         >
-                          {product.initialPrice?.toLocaleString("vi-VN")} ₫
+                          {formatPrice(product.initialPrice)}
                         </span>
                       </div>
 
-                      {product.latestPrice && (
+                      {/* "> 0" thay vì "&&": giá 0 (sàn chưa có giá) không còn in ra số "0" lạc chỗ */}
+                      {product.latestPrice > 0 && (
                         <div className="min-w-0 sm:text-right">
                           <span className="text-[11px] text-orange-600 uppercase font-bold tracking-wider mb-1.5 block">
-                            Current Market Price
+                            {product.isInStock === false ? "Last Known Price" : "Current Market Price"}
                           </span>
                           <span
                             title={`${product.latestPrice} ₫`}
@@ -453,11 +433,12 @@ export default function Detail() {
             <div className="bg-white py-16 px-4 rounded-3xl shadow-sm border border-slate-100 border-dashed text-center">
               <span className="text-5xl mb-4 block">🏷️</span>
               <h3 className="text-xl font-bold text-slate-900 mb-2 font-questrial">
-                No better deals found
+                No cheaper similar products found
               </h3>
               <p className="text-slate-500 max-w-md mx-auto">
-                We couldn't find any similar products with a lower price at the
-                moment. You're already looking at a great deal!
+                We couldn't find a similar product at a lower price on the
+                other supported platforms right now. Prices change often – try
+                refreshing later.
               </p>
             </div>
           ) : (
@@ -479,6 +460,11 @@ export default function Detail() {
                     )}
 
                     <div className="relative aspect-[4/3] w-full bg-slate-50 rounded-2xl mb-5 p-4 overflow-hidden">
+                      {/* Gợi ý có thể đến từ sàn khác với sản phẩm gốc */}
+                      <PlatformBadge
+                        platform={item.platform || getPlatformFromUrl(item.productLink)}
+                        className="absolute top-3 right-3 z-10"
+                      />
                       <img
                         src={
                           item.imageURL || "https://via.placeholder.com/200"

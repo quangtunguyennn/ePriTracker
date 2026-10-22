@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import { register } from "../api/authApi";
 import {
   Mail,
   Lock,
@@ -33,15 +33,7 @@ export default function Register() {
 
     try {
       // Gọi API đăng ký
-      const response = await axios.post(
-        "https://localhost:44338/api/auth/register",
-        {
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-          password: password,
-        }
-      );
+      await register({ firstName, lastName, email, password });
 
       // Hiển thị thông báo thành công và chuyển hướng về trang login sau 2 giây
       setSuccess("Account created successfully! Redirecting to login...");
