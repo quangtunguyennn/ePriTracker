@@ -50,7 +50,7 @@ export default function Product() {
     fetchProducts();
   }, []);
 
-  // 3. Add new product
+  // 3. Add new product with Target Price Popup
   const handleAddProduct = async (e) => {
     e?.preventDefault();
     if (!linkProduct.trim()) {
@@ -58,7 +58,51 @@ export default function Product() {
       return;
     }
 
-    // Hiển thị trạng thái loading ở góc phải
+    // Popup nhập Target Price chuẩn UI/UX (Đã căn giữa hoàn toàn ô input)
+    const { value: targetPriceInput, isConfirmed } = await Swal.fire({
+      title: "Set Target Price",
+      text: "Enter your desired price to track price drops for this product.",
+      input: "text",
+      inputAttributes: {
+        inputmode: "numeric",
+        pattern: "[0-9]*"
+      },
+      inputPlaceholder: "e.g. 22000000",
+      icon: "question",
+      iconColor: "#ea580c",
+      showCancelButton: true,
+      confirmButtonText: "Confirm",
+      cancelButtonText: "Cancel",
+      buttonsStyling: false,
+      reverseButtons: true,
+      focusCancel: true,
+      backdrop: `
+        rgba(0, 0, 0, 0.4)
+        backdrop-filter
+        backdrop-blur-sm
+      `,
+      customClass: {
+        container: "!font-sans",
+        popup: "!rounded-2xl !shadow-2xl !border !border-gray-100 !p-8 !bg-white !max-w-lg !w-full",
+        title: "!text-3xl !font-semibold !font-questrial !text-gray-900 !p-0 !m-0 !mt-2",
+        htmlContainer: "!text-lg !font-syne  !text-gray-500 !mt-3 !mb-6 !p-0",
+        // Ép vùng chứa input (validationContainer) thành flex column và căn giữa tuyệt đối
+        validationMessage: "!text-center",
+        text : "!text-base !font-urbanist !italic !text-gray-500 !mt-3 !mb-6 !p-0",
+        input: "!border !border-gray-300 !rounded-xl !px-4 !py-3 !text-lg !text-center !w-[85%] !mx-auto !block !mb-6 focus:!outline-none focus:!ring-2 focus:!ring-orange-500/20 focus:!border-orange-500",
+        actions: "!flex !w-full !gap-4 !justify-center !mt-0 !p-0",
+        confirmButton: "!bg-[#ea580c] !font-questrial !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-lg !px-8 !py-3 !transition-all !shadow-sm",
+        cancelButton: "!bg-white !font-questrial !font-bold !cursor-pointer hover:!bg-gray-50 !text-gray-700 !rounded-lg !px-8 !py-3 !border !border-gray-200 !transition-all !shadow-sm",
+      },
+      inputValidator: (value) => {
+        if (!value || isNaN(value) || Number(value) <= 0) {
+          return "Please enter a valid target price!";
+        }
+      }
+    });
+
+    if (!isConfirmed) return;
+
     const loadingToast = toast.loading("Adding product...");
 
     try {
@@ -66,14 +110,18 @@ export default function Product() {
       const token = localStorage.getItem("token");
       const endpoint = `${BASE_URL}/api/product/add`;
 
-      await axios.post(endpoint, JSON.stringify(linkProduct), {
+      const requestBody = {
+        productLink: linkProduct.trim(),
+        targetPrice: Number(targetPriceInput)
+      };
+
+      await axios.post(endpoint, requestBody, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
 
-      // Cập nhật toast thành thành công
       toast.success("Product added successfully!", {
         id: loadingToast,
         duration: 3000,
@@ -87,7 +135,6 @@ export default function Product() {
         error.response?.data ||
         "Error adding product!";
 
-      // Cập nhật toast thành lỗi
       toast.error(`Failed: ${errorMsg}`, {
         id: loadingToast,
         duration: 4000,
@@ -98,58 +145,34 @@ export default function Product() {
   };
 
   // Delete product
-const handleDeleteProduct = async (id) => {
-  const result = await Swal.fire({
-    // Nội dung ngắn gọn, dứt khoát
-    title: "Delete product?",
-    text: "This action cannot be undone.",
-    icon: "warning",
-    iconColor: "#ea580c", // Đồng bộ màu icon với màu thương hiệu (cam)
+  const handleDeleteProduct = async (id) => {
+    const result = await Swal.fire({
+      title: "Delete product?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      iconColor: "#ea580c",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      buttonsStyling: false,
+      reverseButtons: true,
+      focusCancel: true,
+      backdrop: `
+        rgba(0, 0, 0, 0.4)
+        backdrop-filter
+        backdrop-blur-sm
+      `,
+      customClass: {
+        container: "!font-sans",
+        popup: "!rounded-2xl !shadow-2xl !border !border-gray-100 !p-8 !bg-white !max-w-lg !w-full",
+        title: "!text-3xl !font-semibold !font-questrial !text-gray-900 !p-0 !m-0 !mt-2",
+        htmlContainer: "!text-base !font-lexend !italic !text-gray-500 !mt-3 !mb-8 !p-0 !font-normal",
+        actions: "!flex !w-full !gap-4 !justify-center !mt-0 !p-0",
+        confirmButton: "!bg-[#ea580c] !font-questrial !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-lg !px-8 !py-3 !transition-all !shadow-sm !border !border-transparent",
+        cancelButton: "!bg-white !font-questrial !font-bold !cursor-pointer hover:!bg-gray-50 !text-gray-700 !rounded-lg !px-8 !py-3 !border !border-gray-200 !transition-all !shadow-sm",
+      },
+    });
 
-    showCancelButton: true,
-    confirmButtonText: "Delete",
-    cancelButtonText: "Cancel",
-
-    // QUAN TRỌNG: Tắt toàn bộ style gốc của SweetAlert
-    buttonsStyling: false,
-
-    // UX: Đưa nút Cancel sang trái, mặc định focus vào Cancel
-    reverseButtons: true,
-    focusCancel: true,
-
-    // Hiệu ứng mờ nền (Backdrop Blur) sang trọng
-    backdrop: `
-      rgba(0, 0, 0, 0.4)
-      backdrop-filter
-      backdrop-blur-sm
-    `,
-
-    customClass: {
-      container: "!font-sans",
-
-      // 1. KÉO GIÃN CHIỀU NGANG: Dùng !w-full !max-w-lg (~512px) thay vì !max-w-sm
-      popup: "!rounded-2xl !shadow-2xl !border !border-gray-100 !p-8 !bg-white !w-[2000px] !max-w-lg",
-
-      // Tiêu đề: Đã hạ xuống !text-3xl để cân đối với khung hình rộng
-      title: "!text-3xl !font-semibold !font-questrial !text-gray-900 !p-0 !m-0 !mt-2",
-
-      // 2. SỬA LỖI TEXT: Đưa font-syne và kích thước chữ vào 'htmlContainer'
-      htmlContainer: "!text-base !font-lexend !italic   !text-gray-500 !mt-3 !mb-8 !p-0 !font-normal",
-      text: "!font-3xl",
-      // Vùng chứa nút
-      actions: "!flex !w-full !gap-4 !justify-center !mt-0 !p-0",
-
-      // Nút Delete
-      confirmButton:
-        "!bg-[#ea580c] !font-questrial  !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-lg !px-8 !py-3 !transition-all !shadow-sm !border !border-transparent",
-
-      // Nút Cancel4 
-      cancelButton:
-        "!bg-white !font-questrial  !font-bold !cursor-pointer hover:!bg-gray-50 !text-gray-700  !rounded-lg !px-8 !py-3 !border !border-gray-200 !transition-all !shadow-sm",
-    },
-  });
-
-  
     if (!result.isConfirmed) return;
 
     try {
@@ -158,7 +181,7 @@ const handleDeleteProduct = async (id) => {
         params: { id },
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProducts((prev) => prev.filter((p) => p.productId !== id)); // Optimistic UI update
+      setProducts((prev) => prev.filter((p) => p.productId !== id));
       toast.success("Product deleted successfully!");
     } catch (error) {
       toast.error(error.response?.data?.message || "Delete failed!");
@@ -187,7 +210,6 @@ const handleDeleteProduct = async (id) => {
 
   return (
     <div className="min-h-screen bg-gray-50/50 py-8 px-4 sm:px-6 lg:px-8 font-syne relative">
-      {/* Component chứa các thông báo góc trên bên phải */}
       <Toaster
         position="top-right"
         toastOptions={{
@@ -264,23 +286,21 @@ const handleDeleteProduct = async (id) => {
               type="submit"
               disabled={isSubmitting}
               className={`
-    relative group overflow-hidden inline-flex items-center justify-center gap-3 
-    px-8 py-3 rounded-xl text-white tracking-wide
-    focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2
-    transition-all duration-300 ease-out cursor-pointer font-questrial font-semibold text-base
-    ${
-      isSubmitting
-        ? "bg-orange-500 opacity-75 cursor-not-allowed shadow-none scale-100"
-        : "bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-400 hover:to-orange-500 active:scale-[0.97] hover:-translate-y-[1px] shadow-[inset_0px_1px_0px_rgba(255,255,255,0.3),0px_4px_8px_rgba(0,0,0,0.05),0px_12px_24px_rgba(249,115,22,0.3)] hover:shadow-[inset_0px_1px_0px_rgba(255,255,255,0.5),0px_6px_12px_rgba(0,0,0,0.1),0px_16px_32px_rgba(249,115,22,0.4)]"
-    }
-  `}
+                relative group overflow-hidden inline-flex items-center justify-center gap-3 
+                px-8 py-3 rounded-xl text-white tracking-wide
+                focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2
+                transition-all duration-300 ease-out cursor-pointer font-questrial font-semibold text-base
+                ${
+                  isSubmitting
+                    ? "bg-orange-500 opacity-75 cursor-not-allowed shadow-none scale-100"
+                    : "bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-400 hover:to-orange-500 active:scale-[0.97] hover:-translate-y-[1px] shadow-[inset_0px_1px_0px_rgba(255,255,255,0.3),0px_4px_8px_rgba(0,0,0,0.05),0px_12px_24px_rgba(249,115,22,0.3)] hover:shadow-[inset_0px_1px_0px_rgba(255,255,255,0.5),0px_6px_12px_rgba(0,0,0,0.1),0px_16px_32px_rgba(249,115,22,0.4)]"
+                }
+              `}
             >
-              {/* Hiệu ứng vệt sáng (Shimmer) - Làm mượt & thực tế hơn */}
               {!isSubmitting && (
-                <span className=" absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[150%] transition-transform duration-[1.2s] ease-in-out pointer-events-none z-0" />
+                <span className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[150%] transition-transform duration-[1.2s] ease-in-out pointer-events-none z-0" />
               )}
 
-              {/* Lớp bọc nội dung (z-10) */}
               <span className="relative z-10 flex items-center justify-center gap-2.5 w-full">
                 {isSubmitting ? (
                   <>
@@ -293,11 +313,6 @@ const handleDeleteProduct = async (id) => {
                 ) : (
                   <>
                     <span>TRACK</span>
-                    {/* Đổi từ rotate sang dịch chuyển nhẹ (Nghiệp vụ "Track" thường mang ý nghĩa tiến về phía trước) */}
-                    {/* <FontAwesomeIcon
-                      icon={faJira}
-                      className="text-lg text-white/90 group-hover:text-white group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-all duration-300"
-                    /> */}
                   </>
                 )}
               </span>
@@ -307,7 +322,6 @@ const handleDeleteProduct = async (id) => {
 
         {/* SECTION 2: TOOLBAR (FILTER & SEARCH) */}
         <div className="flex flex-col lg:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-          {/* Search Box */}
           <div className="relative w-full lg:w-96">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FontAwesomeIcon
@@ -324,18 +338,17 @@ const handleDeleteProduct = async (id) => {
             />
           </div>
 
-          {/* Filters */}
           <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             <button className="flex-1 font-questrial font-semibold lg:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600 transition-colors">
               Date Added{" "}
               <FontAwesomeIcon icon={faSortDown} className="mt-[-4px]" />
             </button>
 
-            <button className="flex-1 font-questrial font-semibold  lg:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600 transition-colors">
+            <button className="flex-1 font-questrial font-semibold lg:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600 transition-colors">
               Price <FontAwesomeIcon icon={faSortUp} className="mt-[4px]" />
             </button>
 
-            <select className="flex-1 lg:flex-none block pl-3 pr-8 py-2 text-sm border-gray-200 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer  text-gray-700  font-questrial font-semibold">
+            <select className="flex-1 lg:flex-none block pl-3 pr-8 py-2 text-sm border-gray-200 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer text-gray-700 font-questrial font-semibold">
               <option value="" disabled hidden>
                 Price Status
               </option>
@@ -350,7 +363,7 @@ const handleDeleteProduct = async (id) => {
               </option>
             </select>
 
-            <button className="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm  text-gray-700  font-questrial font-semibold hover:bg-gray-50 hover:text-orange-600 transition-colors">
+            <button className="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 font-questrial font-semibold hover:bg-gray-50 hover:text-orange-600 transition-colors">
               <FontAwesomeIcon icon={faFilter} className="text-gray-400" />{" "}
               Advanced Filters
             </button>
@@ -360,7 +373,6 @@ const handleDeleteProduct = async (id) => {
         {/* SECTION 3: PRODUCT GRID */}
         <div>
           {loading ? (
-            // Loading State
             <div className="flex flex-col items-center justify-center py-20">
               <FontAwesomeIcon
                 icon={faSpinner}
@@ -369,7 +381,6 @@ const handleDeleteProduct = async (id) => {
               <p className="text-gray-500 text-lg">Loading products...</p>
             </div>
           ) : filteredProducts.length === 0 ? (
-            // Empty State
             <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl border-dashed">
               <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                 <FontAwesomeIcon
@@ -386,7 +397,6 @@ const handleDeleteProduct = async (id) => {
               </p>
             </div>
           ) : (
-            // Product Grid
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((item) => (
                 <div
@@ -408,7 +418,6 @@ const handleDeleteProduct = async (id) => {
                         ? `${item.latestPrice.toLocaleString("vi-VN")} ₫`
                         : "0 ₫"
                     }
-                    // 👇 Truyền thêm 2 dữ liệu mới vào đây 👇
                     productLink={item.productLink}
                     lastUpdatedAt={item.lastUpdatedAt}
                     onDelete={() => handleDeleteProduct(item.productId)}

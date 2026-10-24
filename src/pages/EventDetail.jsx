@@ -8,10 +8,10 @@ import {
   faSpinner,
   faBoxOpen,
   faExternalLinkAlt,
-  faPlus,
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
 import toast, { Toaster } from "react-hot-toast";
+import Swal from "sweetalert2";
 
 export default function EventDetail() {
   const { eventId } = useParams();
@@ -47,19 +47,73 @@ export default function EventDetail() {
     fetchEventProducts();
   }, [eventId]);
 
-  // Xử lý khi bấm nút Track
+  // Xử lý khi bấm nút Track Deal với Popup nhập Target Price
   const handleTrackProduct = async (productLink, productId) => {
     if (!productLink) {
       toast.error("Cannot track this product: Missing product link.");
       return;
     }
 
+    // Popup nhập Target Price chuẩn UI/UX (Đã căn giữa ô input và bỏ nút tăng giảm)
+    const { value: targetPriceInput, isConfirmed } = await Swal.fire({
+      title: "Set Target Price",
+      text: "Enter your desired price to track price drops for this product.",
+      input: "text",
+      inputAttributes: {
+        inputmode: "numeric",
+        pattern: "[0-9]*",
+      },
+      inputPlaceholder: "e.g. 22000000",
+      icon: "question",
+      iconColor: "#ea580c",
+      showCancelButton: true,
+      confirmButtonText: "Confirm",
+      cancelButtonText: "Cancel",
+      buttonsStyling: false,
+      reverseButtons: true,
+      focusCancel: true,
+      backdrop: `
+        rgba(0, 0, 0, 0.4)
+        backdrop-filter
+        backdrop-blur-sm
+      `,
+      customClass: {
+        container: "!font-sans",
+        popup:
+          "!rounded-3xl !shadow-2xl !border !border-slate-100 !p-8 !bg-white !max-w-lg !w-full",
+        title:
+          "!text-3xl !font-bold !font-urbanist !text-slate-900 !p-0 !m-0 !mt-2",
+        htmlContainer:
+          "!text-base !font-questrial !text-slate-500 !mt-3 !mb-6 !p-0",
+        validationMessage: "!text-center",
+        input:
+          "!border !border-slate-300 !rounded-2xl !px-4 !py-3 !text-lg !text-center !w-[85%] !mx-auto !block !mb-6 focus:!outline-none focus:!ring-2 focus:!ring-orange-500/20 focus:!border-orange-500",
+        actions: "!flex !w-full !gap-4 !justify-center !mt-0 !p-0",
+        confirmButton:
+          "!bg-[#ea580c] !font-questrial !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-xl !px-8 !py-3 !transition-all !shadow-sm",
+        cancelButton:
+          "!bg-white !font-questrial !font-bold !cursor-pointer hover:!bg-slate-50 !text-slate-700 !rounded-xl !px-8 !py-3 !border !border-slate-200 !transition-all !shadow-sm",
+      },
+      inputValidator: (value) => {
+        if (!value || isNaN(value) || Number(value) <= 0) {
+          return "Please enter a valid target price!";
+        }
+      },
+    });
+
+    if (!isConfirmed) return;
+
     setTrackingId(productId);
     const toastId = toast.loading("Adding Product to tracking list...");
     const token = localStorage.getItem("token");
 
     try {
-      await axios.post(`${API_BASE_URL}/api/product/add`, `"${productLink}"`, {
+      const requestBody = {
+        productLink: productLink.trim(),
+        targetPrice: Number(targetPriceInput),
+      };
+
+      await axios.post(`${API_BASE_URL}/api/product/add`, requestBody, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -138,7 +192,6 @@ export default function EventDetail() {
         {/* SECTION 2: PRODUCT GRID */}
         <div>
           {loading ? (
-            // Màn hình Skeleton Loading chuẩn doanh nghiệp
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(8)].map((_, index) => (
                 <div
@@ -160,7 +213,6 @@ export default function EventDetail() {
               ))}
             </div>
           ) : filteredProducts.length === 0 ? (
-            // Màn hình rỗng (Empty State)
             <div className="flex flex-col items-center justify-center py-24 bg-white border border-slate-200/60 rounded-3xl border-dashed">
               <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
                 <FontAwesomeIcon
@@ -180,12 +232,10 @@ export default function EventDetail() {
               </p>
             </div>
           ) : (
-            // Lưới Sản phẩm
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((item) => {
                 const isTracking = trackingId === item.productId;
 
-                // Xử lý Logic hiển thị Giá
                 const oldPrice = item.initialPrice || 0;
                 const currentPrice = item.latestPrice || 0;
                 const isDiscounted =
@@ -199,7 +249,6 @@ export default function EventDetail() {
                     key={item.productId}
                     className="group relative bg-white border border-slate-200/60 p-5 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:border-slate-300 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full overflow-hidden"
                   >
-                    {/* Tag Giảm giá góc trái trên ảnh */}
                     {isDiscounted && (
                       <div className="absolute font-urbanist text-base top-4 left-4 z-10 bg-red-900 text-white text-[11px] font-black px-2.5 py-1 rounded-lg shadow-sm border border-red-50 flex items-center gap-1.5">
                         <FontAwesomeIcon icon={faTag} className="text-[10px]" />
@@ -207,7 +256,6 @@ export default function EventDetail() {
                       </div>
                     )}
 
-                    {/* Hình ảnh */}
                     <div className="relative aspect-[4/3] w-full bg-slate-50 rounded-2xl mb-4 p-4 overflow-hidden flex items-center justify-center">
                       <img
                         src={item.imageURL || "https://via.placeholder.com/200"}
@@ -216,7 +264,6 @@ export default function EventDetail() {
                       />
                     </div>
 
-                    {/* Tên Sản phẩm */}
                     <h3
                       title={item.productName}
                       className="font-bold font-questrial text-slate-800 text-base mb-2 line-clamp-2 leading-snug flex-grow group-hover:text-orange-600 transition-colors break-words"
@@ -224,13 +271,11 @@ export default function EventDetail() {
                       {item.productName}
                     </h3>
 
-                    {/* Khu vực Giá & Hành động */}
                     <div className="mt-auto pt-4 border-t border-slate-100">
                       <div className="mt-auto pt-4 border-t border-slate-100">
                         <div className="flex flex-col mb-5 min-h-[64px] justify-end">
                           {isDiscounted ? (
                             <>
-                              {/* 1. GIÁ CŨ (Original Price) */}
                               <div className="flex items-center gap-1.5 font-questrial mb-1.5">
                                 <span className="font-semibold text-[12px] text-slate-400">
                                   Original:
@@ -240,7 +285,6 @@ export default function EventDetail() {
                                 </span>
                               </div>
 
-                              {/* 2. GIÁ SAU GIẢM (Discounted Price) */}
                               <div>
                                 <span className="text-[11px] text-red-600 font-bold font-questrial uppercase tracking-wider block leading-none mb-1">
                                   DISCOUNTED PRICE
@@ -259,8 +303,6 @@ export default function EventDetail() {
                             </>
                           ) : (
                             <>
-                              {/* TRƯỜNG HỢP KHÔNG GIẢM GIÁ (Regular Price) */}
-                              {/* Spacer giữ khung layout không bị nhảy (tương đương chiều cao của dòng Original) */}
                               <div className="h-[22px]"></div>
                               <div>
                                 <span className="text-[11px] font-bold font-questrial uppercase tracking-wider text-slate-400 block leading-none mb-1">
@@ -282,9 +324,7 @@ export default function EventDetail() {
                         </div>
                       </div>
 
-                      {/* Nút bấm (Buttons) */}
                       <div className="flex gap-2">
-                        {/* Nút Track */}
                         <button
                           onClick={() =>
                             handleTrackProduct(item.productLink, item.productId)
@@ -302,13 +342,11 @@ export default function EventDetail() {
                             </>
                           ) : (
                             <>
-                              <FontAwesomeIcon className="text-slate-300" />
                               <span>Track Deal</span>
                             </>
                           )}
                         </button>
 
-                        {/* Nút View */}
                         {item.productLink ? (
                           <a
                             href={item.productLink}
