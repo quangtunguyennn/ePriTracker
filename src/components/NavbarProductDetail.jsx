@@ -1,6 +1,5 @@
-// src/components/Navbar.jsx
+// src/components/NavbarProductDetail.jsx
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom"; // Import thêm hook này
 export default function NavbarProductDetail() {
   // Hàm xử lý cuộn trang mượt mà
   const scrollToSection = (id) => {

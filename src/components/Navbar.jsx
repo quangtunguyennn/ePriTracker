@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import UserIcon from "./UserIcon"; // Component UserDropdownMenu của bạn
+import { isLoggedIn as hasToken } from "../api/authStorage";
 
 export default function Navbar() {
   const [isUserIconClicked, setIsUserIconClicked] = useState(false);
@@ -11,12 +12,7 @@ export default function Navbar() {
 
   // 2. Kiểm tra token khi component được render
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-    }
+    setIsLoggedIn(hasToken());
   }, []); // [] chạy 1 lần khi load Navbar
 
   const toggleUserMenu = () => {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import { login } from "../api/authApi";
+import { saveAuth } from "../api/authStorage";
 import {
   Mail,
   Lock,
@@ -8,9 +9,6 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
-  TrendingUp,
-  ShieldCheck,
-  Zap,
 } from "lucide-react";
 
 export default function Login() {
@@ -29,22 +27,10 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        "https://localhost:44338/api/auth/login",
-        {
-          email: email,
-          password: password,
-        },
-      );
+      const { token, userRoles } = await login(email, password); // userRoles là một mảng, VD: ["Admin", "User"]
 
-      const token = response.data.token;
-      const userRoles = response.data.userRoles; // Giờ đây là một mảng, VD: ["Admin", "User"]
-
-      // Lưu token vào localStorage
-      localStorage.setItem("token", token);
-
-      // 💡 MẸO: Bạn nên lưu thêm userRoles vào localStorage để dùng cho việc ẩn/hiện menu trên giao diện sau này
-      localStorage.setItem("userRoles", JSON.stringify(userRoles));
+      // Lưu token + roles (dùng cho việc ẩn/hiện menu trên giao diện)
+      saveAuth(token, userRoles);
 
       // Kiểm tra quyền bằng .includes()
       if (userRoles?.includes("Admin")) {

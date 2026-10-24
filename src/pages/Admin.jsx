@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-
-const API_BASE_URL = 'https://localhost:44338';
+import { useState } from 'react';
+import { getErrorMessage } from '../api/client';
+import { crawlPreviewEvents, deleteEvent, postEvent, togglePublishEvent } from '../api/eventApi';
 
 export default function Admin() {
   const [activeMenu, setActiveMenu] = useState('events');
@@ -20,50 +20,18 @@ export default function Admin() {
     { id: 'settings', label: 'System Settings' },
   ];
 
-  const getToken = () => localStorage.getItem('token');
-
-  // // ADMIN-ONLY API CALL (fetches both hidden and visible events)
-  // const fetchDbEvents = async () => {
-  //   try {
-  //     const response = await fetch(`${API_BASE_URL}/api/Event/getAllEventsAdmin`, {
-  //       headers: { 'Authorization': `Bearer ${getToken()}` }
-  //     });
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       const map = {};
-  //       data.forEach(evt => {
-  //         map[evt.tikiEventId] = { eventId: evt.eventId, isPublished: evt.isPublished };
-  //       });
-  //       setDbEventsMap(map);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching DB events:', error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   if (activeMenu === 'events') {
-  //     fetchDbEvents();
-  //   }
-  // }, [activeMenu]);
-
+  // Lỗi có response từ server → hiện message backend trả về; không có response → mất kết nối
   const handleCrawlEvents = async () => {
     setIsCrawling(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/Event/crawlPreview`, {
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPreviewEvents(data);
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      setPreviewEvents(await crawlPreviewEvents());
     } catch (error) {
       console.error(error);
-      alert('Unable to connect to the backend server!');
+      if (error.response) {
+        alert(`Error: ${getErrorMessage(error, 'Request failed')}`);
+      } else {
+        alert('Unable to connect to the backend server!');
+      }
     } finally {
       setIsCrawling(false);
     }
@@ -71,41 +39,25 @@ export default function Admin() {
 
   const handlePostEvent = async (tikiEvent) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/Event/postEvent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`
-        },
-        body: JSON.stringify(tikiEvent)
-      });
-
-      if (response.ok) {
-        alert('🎉 Event published successfully!');
-        // GỌI LẠI HÀM CRAWL ĐỂ LẤY EVENT ID MỚI NHẤT
-        handleCrawlEvents();
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      await postEvent(tikiEvent);
+      alert('🎉 Event published successfully!');
+      // GỌI LẠI HÀM CRAWL ĐỂ LẤY EVENT ID MỚI NHẤT
+      handleCrawlEvents();
     } catch (error) {
       console.error(error);
+      if (error.response) {
+        alert(`Error: ${getErrorMessage(error, 'Request failed')}`);
+      }
     }
   };
 
   const handleTogglePublish = async (eventId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/Event/togglePublish/${eventId}`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-      });
-
-      if (response.ok) {
-        // CẬP NHẬT TRỰC TIẾP TRÊN RAM, KHÔNG CẦN TẢI LẠI TOÀN BỘ (SIÊU MƯỢT)
-        setPreviewEvents(prev => prev.map(evt =>
-          evt.eventId === eventId ? { ...evt, isPublished: !evt.isPublished } : evt
-        ));
-      }
+      await togglePublishEvent(eventId);
+      // CẬP NHẬT TRỰC TIẾP TRÊN RAM, KHÔNG CẦN TẢI LẠI TOÀN BỘ (SIÊU MƯỢT)
+      setPreviewEvents(prev => prev.map(evt =>
+        evt.eventId === eventId ? { ...evt, isPublished: !evt.isPublished } : evt
+      ));
     } catch (error) {
       console.error(error);
     }
@@ -118,21 +70,16 @@ export default function Admin() {
 
     try {
       // 2. Gọi API Xóa
-      const response = await fetch(`${API_BASE_URL}/api/Event/deleteEvent/${eventId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-      });
-
-      if (response.ok) {
-        // 3. Nếu xóa thành công, tự động gọi lại hàm Fetch Events để làm mới danh sách (hiệu ứng bốc hơi)
-        handleCrawlEvents();
-      } else {
-        const errorData = await response.json();
-        alert(`Lỗi khi xóa: ${errorData.message}`);
-      }
+      await deleteEvent(eventId);
+      // 3. Xóa thành công → gọi lại hàm Fetch Events để làm mới danh sách (hiệu ứng bốc hơi)
+      handleCrawlEvents();
     } catch (error) {
       console.error(error);
-      alert('Network error: Không thể kết nối đến server!');
+      if (error.response) {
+        alert(`Lỗi khi xóa: ${getErrorMessage(error, 'Không rõ nguyên nhân')}`);
+      } else {
+        alert('Network error: Không thể kết nối đến server!');
+      }
     }
   };
 

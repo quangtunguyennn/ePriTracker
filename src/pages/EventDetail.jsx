@@ -61,7 +61,7 @@ export default function EventDetail() {
       input: "text",
       inputAttributes: {
         inputmode: "numeric",
-        pattern: "[0-9]*",
+        pattern: "[0-9]*"
       },
       inputPlaceholder: "e.g. 22000000",
       icon: "question",
@@ -79,26 +79,20 @@ export default function EventDetail() {
       `,
       customClass: {
         container: "!font-sans",
-        popup:
-          "!rounded-3xl !shadow-2xl !border !border-slate-100 !p-8 !bg-white !max-w-lg !w-full",
-        title:
-          "!text-3xl !font-bold !font-urbanist !text-slate-900 !p-0 !m-0 !mt-2",
-        htmlContainer:
-          "!text-base !font-questrial !text-slate-500 !mt-3 !mb-6 !p-0",
+        popup: "!rounded-3xl !shadow-2xl !border !border-slate-100 !p-8 !bg-white !max-w-lg !w-full",
+        title: "!text-3xl !font-bold !font-urbanist !text-slate-900 !p-0 !m-0 !mt-2",
+        htmlContainer: "!text-base !font-questrial !text-slate-500 !mt-3 !mb-6 !p-0",
         validationMessage: "!text-center",
-        input:
-          "!border !border-slate-300 !rounded-2xl !px-4 !py-3 !text-lg !text-center !w-[85%] !mx-auto !block !mb-6 focus:!outline-none focus:!ring-2 focus:!ring-orange-500/20 focus:!border-orange-500",
+        input: "!border !border-slate-300 !rounded-2xl !px-4 !py-3 !text-lg !text-center !w-[85%] !mx-auto !block !mb-6 focus:!outline-none focus:!ring-2 focus:!ring-orange-500/20 focus:!border-orange-500",
         actions: "!flex !w-full !gap-4 !justify-center !mt-0 !p-0",
-        confirmButton:
-          "!bg-[#ea580c] !font-questrial !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-xl !px-8 !py-3 !transition-all !shadow-sm",
-        cancelButton:
-          "!bg-white !font-questrial !font-bold !cursor-pointer hover:!bg-slate-50 !text-slate-700 !rounded-xl !px-8 !py-3 !border !border-slate-200 !transition-all !shadow-sm",
+        confirmButton: "!bg-[#ea580c] !font-questrial !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-xl !px-8 !py-3 !transition-all !shadow-sm",
+        cancelButton: "!bg-white !font-questrial !font-bold !cursor-pointer hover:!bg-slate-50 !text-slate-700 !rounded-xl !px-8 !py-3 !border !border-slate-200 !transition-all !shadow-sm",
       },
       inputValidator: (value) => {
         if (!value || isNaN(value) || Number(value) <= 0) {
           return "Please enter a valid target price!";
         }
-      },
+      }
     });
 
     if (!isConfirmed) return;
@@ -110,7 +104,7 @@ export default function EventDetail() {
     try {
       const requestBody = {
         productLink: productLink.trim(),
-        targetPrice: Number(targetPriceInput),
+        targetPrice: Number(targetPriceInput)
       };
 
       await axios.post(`${API_BASE_URL}/api/product/add`, requestBody, {

@@ -1,33 +1,56 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
+import { getPublishedEvents } from "../api/eventApi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faMagnifyingGlass,
     faSpinner,
     faCalendarAlt,
-    faArrowUpRightFromSquare,
-    faBoxesStacked
+    faArrowUpRightFromSquare
 } from "@fortawesome/free-solid-svg-icons";
 import toast, { Toaster } from "react-hot-toast";
+import PlatformBadge from "../components/PlatformBadge";
+import { getEventEndLabel } from "../utils/eventTime";
+
+// Ảnh đại diện sự kiện:
+// - Có ≥ 2 ảnh sản phẩm (sự kiện CellphoneS không có banner riêng) → ghép lưới 2×2
+// - Banner Tiki là ảnh ngang → phủ kín khung; ảnh sản phẩm vuông → không cắt
+function EventCover({ event, platform }) {
+    const previews = event.previewImageUrls ?? [];
+
+    if (previews.length >= 2) {
+        return (
+            <div className="grid grid-cols-2 grid-rows-2 gap-px w-full h-full bg-gray-100">
+                {previews.slice(0, 4).map((url, index) => (
+                    <div key={url} className="bg-white flex items-center justify-center p-2 overflow-hidden">
+                        <img src={url} alt={`${event.title} – ${index + 1}`} loading="lazy" className="max-w-full max-h-full object-contain" />
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    return (
+        <img
+            src={event.imageUrl}
+            alt={event.title}
+            className={platform === "Tiki"
+                ? "w-full h-full object-cover object-center"
+                : "w-full h-full object-contain object-center p-4 bg-white"}
+        />
+    );
+}
 
 export default function EventList() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
-    const BASE_URL = "https://localhost:44338";
-
     useEffect(() => {
         const fetchEvents = async () => {
             try {
                 setLoading(true);
-                // Nếu API Event không yêu cầu token thì có thể bỏ header Authorization
-                const token = localStorage.getItem("token");
-                const response = await axios.get(`${BASE_URL}/api/Event/getPublishedEvents`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                });
-                setEvents(response.data);
+                setEvents(await getPublishedEvents());
             } catch (error) {
                 console.error("Error loading events:", error);
                 toast.error("Failed to load events.");
@@ -52,10 +75,10 @@ export default function EventList() {
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="max-w-2xl">
                         <h1 className="font-urbanist md:text-3xl font-bold text-gray-900 mb-2">
-                            Tiki Events
+                            Events
                         </h1>
                         <p className="text-gray-500 font-ggf text-sm md:text-base">
-                            Discover ongoing events and see which of your tracked products are currently on sale.
+                            Discover ongoing events across supported platforms and see which products are currently on sale.
                         </p>
                     </div>
 
@@ -92,19 +115,27 @@ export default function EventList() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredEvents.map((evt) => (
+                            {filteredEvents.map((evt) => {
+                                const platform = evt.platform || "Tiki";
+                                const endLabel = getEventEndLabel(evt);
+
+                                return (
                                 <div key={evt.eventId} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1">
-                                    <div className="h-48 overflow-hidden bg-gray-50">
-                                        <img
-                                            src={evt.imageUrl}
-                                            alt={evt.title}
-                                            className="w-full h-full object-cover object-center"
-                                        />
+                                    <div className="relative h-48 overflow-hidden bg-gray-50">
+                                        <EventCover event={evt} platform={platform} />
+                                        <PlatformBadge platform={platform} className="absolute top-3 left-3 shadow-sm" />
                                     </div>
                                     <div className="p-5 flex flex-col flex-1">
-                                        <h3 className="font-urbanist font-bold text-lg text-gray-900 line-clamp-2 mb-4">
+                                        <h3 className="font-urbanist font-bold text-lg text-gray-900 line-clamp-2 mb-2">
                                             {evt.title}
                                         </h3>
+                                        {endLabel && (
+                                            <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-600 font-questrial mb-4">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                                {endLabel}
+                                            </p>
+                                        )}
+                                        {!endLabel && <div className="mb-2" />}
 
                                         <div className="mt-auto flex flex-col sm:flex-row gap-3">
                                             <a
@@ -113,7 +144,7 @@ export default function EventList() {
                                                 rel="noreferrer"
                                                 className="flex-1 flex justify-center items-center gap-2 px-4 py-2.5 border-2 border-orange-100 text-orange-600 rounded-xl hover:bg-orange-50 font-questrial font-semibold transition-colors text-sm"
                                             >
-                                                <FontAwesomeIcon icon={faArrowUpRightFromSquare} /> Tiki
+                                                <FontAwesomeIcon icon={faArrowUpRightFromSquare} /> {platform}
                                             </a>
                                             <Link
                                                 to={`/events/${evt.eventId}`}
@@ -124,7 +155,8 @@ export default function EventList() {
                                         </div>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

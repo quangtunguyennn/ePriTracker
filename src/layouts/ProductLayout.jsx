@@ -1,5 +1,5 @@
-// src/layouts/HomeLayout.jsx
-import { Outlet, ScrollRestoration } from "react-router-dom"; // Gộp lại ở đây
+// src/layouts/ProductLayout.jsx
+import { Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CustomScrollRestoration from "../components/CustomScrollRestoration";

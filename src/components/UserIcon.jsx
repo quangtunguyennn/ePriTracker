@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { User, Settings, LogOut, LogIn, UserPlus } from 'lucide-react';
-import axios from 'axios';
+import { getMe } from '../api/authApi';
+import { clearAuth, getToken } from '../api/authStorage';
 
 export default function UserDropdownMenu() {
-  const baseURL = 'https://localhost:44338';
-
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -12,29 +11,23 @@ export default function UserDropdownMenu() {
 
   useEffect(() => {
     const getUserData = async () => {
-      const token = localStorage.getItem('token');
-
       // If no token exists, set unauthenticated state
-      if (!token) {
+      if (!getToken()) {
         setIsLoggedIn(false);
         setIsLoading(false);
         return;
       }
 
       try {
-        const response = await axios.get(`${baseURL}/api/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const me = await getMe();
 
-        setUserName(response.data.userName);
-        setUserEmail(response.data.userEmail);
+        setUserName(me.userName);
+        setUserEmail(me.userEmail);
         setIsLoggedIn(true);
       } catch (error) {
         console.error("Failed to fetch user data:", error);
         // Remove invalid/expired token
-        localStorage.removeItem('token');
+        clearAuth();
         setIsLoggedIn(false);
       } finally {
         setIsLoading(false);
@@ -46,7 +39,7 @@ export default function UserDropdownMenu() {
 
   // Navigation / Action Handlers
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    clearAuth();
     setIsLoggedIn(false);
     window.location.href = '/';
   };
