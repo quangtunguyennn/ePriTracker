@@ -1,7 +1,9 @@
-// Nhận diện sàn TMĐT từ link sản phẩm (khớp với các strategy ở backend: TikiScraper, CellphoneSScraper)
+// Nhận diện sàn TMĐT từ link sản phẩm (khớp với các strategy ở backend: TikiScraper, CellphoneSScraper, HacomScraper, GearvnScraper)
 const PLATFORMS = [
   { name: "Tiki", hosts: ["tiki.vn"] },
   { name: "CellphoneS", hosts: ["cellphones.com.vn"] },
+  { name: "HACOM", hosts: ["hacom.vn"] },
+  { name: "GearVN", hosts: ["gearvn.com"] },
 ];
 
 /** @returns {string|null} Tên sàn, ví dụ "Tiki"; null nếu không nhận ra. */

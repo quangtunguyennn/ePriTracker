@@ -14,13 +14,21 @@ export const refreshSuggestions = (productId) =>
     .get("/api/product/refresh-suggestions", { params: { productId } })
     .then((res) => res.data);
 
-/** Backend nhận body là một chuỗi JSON: "https://tiki.vn/..." */
-export const addProduct = (productLink) =>
+/** targetPrice: giá mục tiêu (VND) để nhận cảnh báo, null = không đặt. */
+export const addProduct = (productLink, targetPrice = null) =>
   api
-    .post("/api/product/add", JSON.stringify(productLink), {
-      headers: { "Content-Type": "application/json" },
-    })
+    .post("/api/product/add", { productLink, targetPrice })
     .then((res) => res.data);
+
+/** Lịch sử giá cho biểu đồ (lưu ý route số nhiều: /api/products/...). */
+export const getPriceHistory = (productId, days) =>
+  api
+    .get(`/api/products/${productId}/price-history`, { params: { days } })
+    .then((res) => res.data);
+
+/** Video review trên YouTube (BE gọi YouTube Data API). */
+export const getReviewVideos = (productId) =>
+  api.get(`/api/product/${productId}/reviews`).then((res) => res.data);
 
 export const deleteProduct = (id) =>
   api.delete("/api/product/delete", { params: { id } }).then((res) => res.data);

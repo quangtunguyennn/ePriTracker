@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { addProduct, deleteProduct, getTrackedProducts } from "../api/productApi";
 import { getPlatformFromUrl } from "../utils/platform";
+import { parseTargetPrice, validateTargetPrice } from "../utils/targetPrice";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSortDown,
@@ -53,7 +54,7 @@ export default function Product() {
     // Popup nhập Target Price chuẩn UI/UX (Đã căn giữa hoàn toàn ô input)
     const { value: targetPriceInput, isConfirmed } = await Swal.fire({
       title: "Set Target Price",
-      text: "Enter your desired price to track price drops for this product.",
+      text: "Get alerted when the price drops to this level. Optional – leave blank to just track.",
       input: "text",
       inputAttributes: {
         inputmode: "numeric",
@@ -86,11 +87,7 @@ export default function Product() {
         confirmButton: "!bg-[#ea580c] !font-questrial !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-lg !px-8 !py-3 !transition-all !shadow-sm",
         cancelButton: "!bg-white !font-questrial !font-bold !cursor-pointer hover:!bg-gray-50 !text-gray-700 !rounded-lg !px-8 !py-3 !border !border-gray-200 !transition-all !shadow-sm",
       },
-      inputValidator: (value) => {
-        if (!value || isNaN(value) || Number(value) <= 0) {
-          return "Please enter a valid target price!";
-        }
-      }
+      inputValidator: validateTargetPrice,
     });
 
     if (!isConfirmed) return;
@@ -99,7 +96,7 @@ export default function Product() {
 
     try {
       setIsSubmitting(true);
-      await addProduct(linkProduct.trim(), Number(targetPriceInput));
+      await addProduct(linkProduct.trim(), parseTargetPrice(targetPriceInput));
 
       toast.success("Product added successfully!", {
         id: loadingToast,
@@ -109,10 +106,10 @@ export default function Product() {
       setLinkProduct("");
       fetchProducts();
     } catch (error) {
+      // BE trả { message } cho lỗi nghiệp vụ; lỗi khác (vd 400 validation) là object → không ghép thẳng vào chuỗi
+      const data = error.response?.data;
       const errorMsg =
-        error.response?.data?.message ||
-        error.response?.data ||
-        "Error adding product!";
+        data?.message || (typeof data === "string" && data) || "Error adding product!";
 
       toast.error(`Failed: ${errorMsg}`, {
         id: loadingToast,

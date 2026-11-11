@@ -39,8 +39,9 @@ export default function Admin() {
 
   const handlePostEvent = async (tikiEvent) => {
     try {
-      await postEvent(tikiEvent);
-      alert('🎉 Event published successfully!');
+      // BE cào thử ngay sau khi đăng và báo số sản phẩm (0 = trang mã giảm giá / chưa mở bán → người dùng mở ra sẽ trống)
+      const result = await postEvent(tikiEvent);
+      alert(result?.productCount === 0 ? `⚠️ ${result.message}` : `🎉 ${result?.message ?? 'Event published successfully!'}`);
       // GỌI LẠI HÀM CRAWL ĐỂ LẤY EVENT ID MỚI NHẤT
       handleCrawlEvents();
     } catch (error) {
@@ -190,6 +191,15 @@ export default function Admin() {
                               <span className="px-3 py-1.5 bg-emerald-900/40 border border-emerald-800 text-emerald-400 rounded-lg text-xs font-bold tracking-wide">LIVE</span>
                             ) : (
                               <span className="px-3 py-1.5 bg-rose-900/40 border border-rose-800 text-rose-400 rounded-lg text-xs font-bold tracking-wide line-through">HIDDEN</span>
+                            )}
+                            {/* Số sản phẩm cào được gần nhất (null = chưa cào) – 0 thì người dùng mở sự kiện sẽ thấy trống */}
+                            {!isExpired && evt.liveProductCount === 0 && (
+                              <span className="mt-2 block text-[11px] font-bold tracking-wide text-amber-400" title="Trang này hiện không có sản phẩm (trang mã giảm giá hoặc chưa mở bán)">
+                                ⚠ NO PRODUCTS
+                              </span>
+                            )}
+                            {!isExpired && evt.liveProductCount > 0 && (
+                              <span className="mt-2 block text-[11px] text-slate-400">{evt.liveProductCount} products</span>
                             )}
                           </td>
                           <td className="p-5 text-center">

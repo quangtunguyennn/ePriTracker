@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
+import { getLiveEventProducts, getPublishedEvents } from "../api/eventApi";
+import { getErrorMessage } from "../api/client";
+import PlatformBadge from "../components/PlatformBadge";
+import { getEventEndLabel } from "../utils/eventTime";
+import { parseTargetPrice, validateTargetPrice } from "../utils/targetPrice";
+import { addProduct } from "../api/productApi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
@@ -16,36 +21,44 @@ import Swal from "sweetalert2";
 export default function EventDetail() {
   const { eventId } = useParams();
   const [products, setProducts] = useState([]);
+  const [event, setEvent] = useState(null); // tên, sàn, giờ kết thúc – lấy từ danh sách sự kiện
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loadError, setLoadError] = useState(null); // lý do không tải được sản phẩm (BE trả về)
 
   // State quản lý hiệu ứng loading cho nút Track của từng sản phẩm
   const [trackingId, setTrackingId] = useState(null);
-
-  const API_BASE_URL = "https://localhost:44338";
 
   useEffect(() => {
     const fetchEventProducts = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
-
-        const response = await axios.get(
-          `${API_BASE_URL}/api/Event/getLiveEventProducts/${eventId}`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
-        setProducts(response.data);
+        setLoadError(null);
+        setProducts(await getLiveEventProducts(eventId));
       } catch (error) {
         console.error("Error loading event products:", error);
-        toast.error("Failed to load products for this event.");
+        // BE báo lý do cụ thể: sự kiện chưa có sản phẩm, hoặc đang tải từ sàn (thử lại sau ít phút)
+        setLoadError(getErrorMessage(error, "Failed to load products for this event."));
       } finally {
         setLoading(false);
       }
     };
 
+    // Thông tin sự kiện chỉ để hiển thị – lỗi thì vẫn xem được sản phẩm
+    const fetchEventInfo = async () => {
+      try {
+        const events = await getPublishedEvents();
+        setEvent(events.find((e) => e.eventId === eventId) ?? null);
+      } catch (error) {
+        console.error("Error loading event info:", error);
+      }
+    };
+
     fetchEventProducts();
+    fetchEventInfo();
   }, [eventId]);
+
+  const endLabel = getEventEndLabel(event);
 
   // Xử lý khi bấm nút Track Deal với Popup nhập Target Price
   const handleTrackProduct = async (productLink, productId) => {
@@ -57,7 +70,7 @@ export default function EventDetail() {
     // Popup nhập Target Price chuẩn UI/UX (Đã căn giữa ô input và bỏ nút tăng giảm)
     const { value: targetPriceInput, isConfirmed } = await Swal.fire({
       title: "Set Target Price",
-      text: "Enter your desired price to track price drops for this product.",
+      text: "Get alerted when the price drops to this level. Optional – leave blank to just track.",
       input: "text",
       inputAttributes: {
         inputmode: "numeric",
@@ -88,31 +101,16 @@ export default function EventDetail() {
         confirmButton: "!bg-[#ea580c] !font-questrial !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-xl !px-8 !py-3 !transition-all !shadow-sm",
         cancelButton: "!bg-white !font-questrial !font-bold !cursor-pointer hover:!bg-slate-50 !text-slate-700 !rounded-xl !px-8 !py-3 !border !border-slate-200 !transition-all !shadow-sm",
       },
-      inputValidator: (value) => {
-        if (!value || isNaN(value) || Number(value) <= 0) {
-          return "Please enter a valid target price!";
-        }
-      }
+      inputValidator: validateTargetPrice,
     });
 
     if (!isConfirmed) return;
 
     setTrackingId(productId);
     const toastId = toast.loading("Adding Product to tracking list...");
-    const token = localStorage.getItem("token");
 
     try {
-      const requestBody = {
-        productLink: productLink.trim(),
-        targetPrice: Number(targetPriceInput)
-      };
-
-      await axios.post(`${API_BASE_URL}/api/product/add`, requestBody, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      await addProduct(productLink.trim(), parseTargetPrice(targetPriceInput));
 
       toast.success("Product tracked successfully!", { id: toastId });
     } catch (error) {
@@ -151,12 +149,20 @@ export default function EventDetail() {
 
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div className="max-w-2xl w-full">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest rounded-full mb-3 border border-emerald-200/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Live Event
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest rounded-full border border-emerald-200/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Live Event
+                </div>
+                <PlatformBadge platform={event?.platform} />
+                {endLabel && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200 text-xs font-bold font-questrial">
+                    {endLabel}
+                  </span>
+                )}
               </div>
               <h1 className="font-urbanist md:text-4xl text-3xl font-black text-slate-900 mb-2 tracking-tight">
-                Event Products
+                {event?.title || "Event Products"}
               </h1>
               <p className="text-slate-500 font-ggf text-sm md:text-base">
                 Explore and track products participating in this specific event.
@@ -217,13 +223,17 @@ export default function EventDetail() {
               <h3 className="text-xl font-bold text-slate-900 mb-2 font-urbanist">
                 No products found
               </h3>
-              <p className="text-slate-500 max-w-md text-center mb-6 font-medium">
-                We couldn't find any products matching{" "}
-                <span className="font-bold text-slate-700">
-                  "{searchQuery}"
-                </span>{" "}
-                in this event.
-              </p>
+              {loadError ? (
+                <p className="text-slate-500 max-w-md text-center mb-6 font-medium">{loadError}</p>
+              ) : (
+                <p className="text-slate-500 max-w-md text-center mb-6 font-medium">
+                  We couldn't find any products matching{" "}
+                  <span className="font-bold text-slate-700">
+                    "{searchQuery}"
+                  </span>{" "}
+                  in this event.
+                </p>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -264,6 +274,13 @@ export default function EventDetail() {
                     >
                       {item.productName}
                     </h3>
+
+                    {/* Ghi chú của sàn, vd flash sale CellphoneS: "Đã bán 1/10 suất" */}
+                    {item.desc && (
+                      <p className="text-xs font-semibold text-red-600 font-questrial mb-2">
+                        {item.desc}
+                      </p>
+                    )}
 
                     <div className="mt-auto pt-4 border-t border-slate-100">
                       <div className="mt-auto pt-4 border-t border-slate-100">
