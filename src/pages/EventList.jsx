@@ -14,7 +14,9 @@ import { getEventEndLabel } from "../utils/eventTime";
 
 // Ảnh đại diện sự kiện:
 // - Có ≥ 2 ảnh sản phẩm (sự kiện CellphoneS không có banner riêng) → ghép lưới 2×2
-// - Banner Tiki là ảnh ngang → phủ kín khung; ảnh sản phẩm vuông → không cắt
+// - Banner Tiki / GearVN là ảnh ngang → phủ kín khung; ảnh sản phẩm vuông → không cắt
+const BANNER_PLATFORMS = ["Tiki", "GearVN"];
+
 function EventCover({ event, platform }) {
     const previews = event.previewImageUrls ?? [];
 
@@ -34,7 +36,7 @@ function EventCover({ event, platform }) {
         <img
             src={event.imageUrl}
             alt={event.title}
-            className={platform === "Tiki"
+            className={BANNER_PLATFORMS.includes(platform)
                 ? "w-full h-full object-cover object-center"
                 : "w-full h-full object-contain object-center p-4 bg-white"}
         />

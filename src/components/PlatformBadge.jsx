@@ -2,6 +2,8 @@
 const STYLES = {
   Tiki: "bg-sky-50 text-sky-700 border-sky-200",
   CellphoneS: "bg-rose-50 text-rose-700 border-rose-200",
+  HACOM: "bg-blue-50 text-blue-700 border-blue-200",
+  GearVN: "bg-red-50 text-red-700 border-red-200",
 };
 
 export default function PlatformBadge({ platform, className = "" }) {

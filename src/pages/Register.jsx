@@ -73,8 +73,10 @@ export default function Register() {
         </div>
 
         <div className="font-syne text-4xl text-center relative z-10">
-          <p>on working ...</p>
-         
+          <p>Join us today...</p>
+          <p className="text-lg text-slate-400 mt-4 font-urbanist">
+            Start tracking enterprise prices with intelligent automation.
+          </p>
         </div>
 
         <div className="relative z-10 text-sm text-slate-500">

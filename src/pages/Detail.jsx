@@ -1,15 +1,15 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect, useId, useMemo } from "react";
-import axios from "axios";
 import {
   addProduct,
+  getPriceHistory,
   getProduct,
+  getReviewVideos,
   getSuggestions,
   refreshSuggestions,
 } from "../api/productApi";
 import {
   RefreshCw,
-  Plus,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -33,21 +33,6 @@ import {
   ReferenceLine,
   ReferenceDot,
 } from "recharts";
-
-/* =====================================================================
- *  BASE URL của API
- *  (trước đây dùng `BASE_URL` mà chưa khai báo -> ReferenceError, bị catch nuốt nên
- *   biểu đồ giá và video không bao giờ có dữ liệu)
- *  Ưu tiên: biến môi trường Vite -> baseURL mặc định của axios -> localhost swagger.
- *  Tính lúc gọi (không phải lúc import) để nhận được axios.defaults.baseURL đặt ở main.jsx.
- * ===================================================================== */
-const getBaseUrl = () =>
-  (
-    import.meta.env?.VITE_API_URL ||
-    import.meta.env?.VITE_API_BASE_URL ||
-    axios.defaults.baseURL ||
-    "https://localhost:44338"
-  ).replace(/\/+$/, "");
 
 /* =====================================================================
  *  PRICE HISTORY — helpers
@@ -814,22 +799,12 @@ export default function Detail() {
     );
 
     const fetchPriceHistory = async () => {
-      const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
       try {
         setLoadingHistory(true);
         setErrorHistory(null);
-        // Endpoint của backend là /api/products/... (số nhiều)
-        const response = await axios.get(
-          `${getBaseUrl()}/api/products/${id}/price-history`,
-          {
-            params: { days: historyDays },
-            headers: headers,
-          },
-        );
+        const data = await getPriceHistory(id, historyDays);
         if (ignore) return;
-        setPriceHistory(response.data);
+        setPriceHistory(data);
         setLoadedDays(historyDays);
       } catch (err) {
         if (ignore) return;
@@ -852,18 +827,12 @@ export default function Detail() {
     let ignore = false;
 
     const fetchVideoReviews = async () => {
-      const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
       try {
         setLoadingVideos(true);
         setErrorVideos(null);
-        const response = await axios.get(
-          `${getBaseUrl()}/api/product/${id}/reviews`,
-          { headers }
-        );
+        const data = await getReviewVideos(id);
         if (ignore) return;
-        setVideoReviews(response.data);
+        setVideoReviews(data);
       } catch (err) {
         if (ignore) return;
         console.error("Error fetching video reviews:", err);
