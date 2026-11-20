@@ -1,6 +1,6 @@
-// Thành phần giao diện dùng chung cho các tab trang Admin (nền tối, kính mờ như trang Admin cũ)
+// Thành phần giao diện dùng chung cho các tab trang Admin – kiểu SaaS sáng: thẻ trắng, viền mảnh, chữ xám đậm/nhạt
 
-export const PANEL = "bg-[#0f172a]/85 rounded-2xl border border-slate-700/50 shadow-xl";
+export const PANEL = "bg-white rounded-xl border border-slate-200";
 
 export function Panel({ title, subtitle, actions, children, className = "" }) {
   return (
@@ -8,8 +8,8 @@ export function Panel({ title, subtitle, actions, children, className = "" }) {
       {(title || actions) && (
         <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
           <div>
-            {title && <h3 className="text-xl font-urbanist font-bold text-white">{title}</h3>}
-            {subtitle && <p className="text-sm font-syne text-slate-400 mt-1">{subtitle}</p>}
+            {title && <h3 className="text-base font-semibold text-slate-900">{title}</h3>}
+            {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
           </div>
           {actions}
         </div>
@@ -19,50 +19,57 @@ export function Panel({ title, subtitle, actions, children, className = "" }) {
   );
 }
 
+// Màu trạng thái chỉ cho số liệu mang nghĩa tốt/xấu; luôn kèm chữ ở dòng gợi ý để không dựa vào màu
 export function StatCard({ label, value, hint, tone = "default" }) {
   const tones = {
-    default: "text-white",
-    good: "text-emerald-400",
-    warn: "text-amber-400",
-    bad: "text-rose-400",
+    default: "text-slate-900",
+    good: "text-emerald-700",
+    warn: "text-amber-700",
+    bad: "text-rose-700",
   };
   return (
     <div className={`${PANEL} p-5`}>
-      <p className="text-xs font-syne uppercase tracking-widest text-slate-400">{label}</p>
-      <p className={`mt-2 text-3xl font-urbanist font-bold ${tones[tone] ?? tones.default}`}>{value}</p>
-      {hint && <p className="mt-1 text-xs font-syne text-slate-500">{hint}</p>}
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className={`mt-2 text-[28px] leading-none font-semibold ${tones[tone] ?? tones.default}`}>{value}</p>
+      {hint && <p className="mt-2 text-xs text-slate-500">{hint}</p>}
     </div>
   );
 }
 
+// Nhãn trạng thái: chấm màu + chữ (không để màu đứng một mình)
 export function Pill({ children, tone = "default", title }) {
   const tones = {
-    default: "bg-slate-800/80 border-slate-600 text-slate-300",
-    good: "bg-emerald-900/40 border-emerald-800 text-emerald-400",
-    warn: "bg-amber-900/40 border-amber-800 text-amber-400",
-    bad: "bg-rose-900/40 border-rose-800 text-rose-400",
-    info: "bg-cyan-900/40 border-cyan-800 text-cyan-400",
+    default: { box: "bg-slate-100 text-slate-700", dot: "bg-slate-400" },
+    good: { box: "bg-emerald-50 text-emerald-800", dot: "bg-emerald-500" },
+    warn: { box: "bg-amber-50 text-amber-800", dot: "bg-amber-500" },
+    bad: { box: "bg-rose-50 text-rose-800", dot: "bg-rose-500" },
+    info: { box: "bg-sky-50 text-sky-800", dot: "bg-sky-500" },
   };
+  const t = tones[tone] ?? tones.default;
   return (
-    <span title={title} className={`inline-block px-2.5 py-1 border rounded-lg text-[11px] font-bold tracking-wide ${tones[tone] ?? tones.default}`}>
+    <span title={title} className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium whitespace-nowrap ${t.box}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${t.dot}`} aria-hidden="true" />
       {children}
     </span>
   );
 }
 
-export function LoadingRow({ text = "Loading..." }) {
-  return <p className="text-sm font-syne text-slate-400 py-6 text-center">{text}</p>;
+export function LoadingRow({ text = "Loading…" }) {
+  return <p className="text-sm text-slate-500 py-6 text-center">{text}</p>;
 }
 
 export function ErrorBox({ message, onRetry }) {
   return (
-    <div className={`${PANEL} p-6 text-center`}>
-      <p className="text-rose-400 font-syne">{message}</p>
+    <div className={`${PANEL} p-8 text-center`}>
+      <p className="text-sm text-rose-700">{message}</p>
       {onRetry && (
-        <button onClick={onRetry} className="mt-4 px-5 py-2 rounded-lg border border-slate-600 text-slate-300 text-xs font-bold hover:bg-slate-800">
-          RETRY
+        <button onClick={onRetry} className="mt-4 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          Try again
         </button>
       )}
     </div>
   );
 }
+
+// Nút phụ dùng chung (viền xám, nền trắng)
+export const SECONDARY_BUTTON = "inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60";

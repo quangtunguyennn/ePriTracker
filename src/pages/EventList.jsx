@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 import { getPublishedEvents } from "../api/eventApi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    faMagnifyingGlass,
-    faSpinner,
+    faMagnifyingGlass,
     faCalendarAlt,
     faArrowUpRightFromSquare
 } from "@fortawesome/free-solid-svg-icons";
 import toast, { Toaster } from "react-hot-toast";
 import PlatformBadge from "../components/PlatformBadge";
+import { EventCardSkeleton, SkeletonGrid } from "../components/CardSkeletons";
 import { getEventEndLabel } from "../utils/eventTime";
 
 // Ảnh đại diện sự kiện:
@@ -101,10 +101,8 @@ export default function EventList() {
                 {/* SECTION 2: EVENT GRID */}
                 <div>
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20">
-                            <FontAwesomeIcon icon={faSpinner} className="animate-spin text-4xl text-orange-500 mb-4" />
-                            <p className="text-gray-500 text-lg">Loading events...</p>
-                        </div>
+                        <SkeletonGrid count={6} Card={EventCardSkeleton} label="Loading events…"
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" />
                     ) : filteredEvents.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl border-dashed">
                             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
@@ -117,12 +115,12 @@ export default function EventList() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredEvents.map((evt) => {
+                            {filteredEvents.map((evt, index) => {
                                 const platform = evt.platform || "Tiki";
                                 const endLabel = getEventEndLabel(evt);
 
                                 return (
-                                <div key={evt.eventId} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1">
+                                <div key={evt.eventId} style={{ "--i": Math.min(index, 11) }} className="anim-item bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1">
                                     <div className="relative h-48 overflow-hidden bg-gray-50">
                                         <EventCover event={evt} platform={platform} />
                                         <PlatformBadge platform={platform} className="absolute top-3 left-3 shadow-sm" />

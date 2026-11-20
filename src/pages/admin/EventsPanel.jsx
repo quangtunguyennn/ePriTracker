@@ -19,12 +19,13 @@ export default function EventsPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="inline-flex rounded-xl border border-slate-700/50 bg-[#0f172a]/60 p-1">
+      <div className="inline-flex rounded-lg border border-slate-300 bg-white p-1">
         {TABS.map(t => (
           <button
             key={t.id}
+            aria-pressed={tab === t.id}
             onClick={() => select(t.id)}
-            className={`px-5 py-2 rounded-lg text-sm font-syne font-medium transition-all ${tab === t.id ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === t.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
           >
             {t.label}
           </button>

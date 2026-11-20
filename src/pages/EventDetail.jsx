@@ -237,7 +237,7 @@ export default function EventDetail() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((item) => {
+              {filteredProducts.map((item, index) => {
                 const isTracking = trackingId === item.productId;
 
                 const oldPrice = item.initialPrice || 0;
@@ -251,7 +251,8 @@ export default function EventDetail() {
                 return (
                   <div
                     key={item.productId}
-                    className="group relative bg-white border border-slate-200/60 p-5 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:border-slate-300 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full overflow-hidden"
+                    style={{ "--i": Math.min(index, 11) }}
+                    className="anim-item group relative bg-white border border-slate-200/60 p-5 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:border-slate-300 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full overflow-hidden"
                   >
                     {isDiscounted && (
                       <div className="absolute font-urbanist text-base top-4 left-4 z-10 bg-red-900 text-white text-[11px] font-black px-2.5 py-1 rounded-lg shadow-sm border border-red-50 flex items-center gap-1.5">

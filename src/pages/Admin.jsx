@@ -4,17 +4,19 @@ import MonitoringPanel from './admin/MonitoringPanel';
 import StatsPanel from './admin/StatsPanel';
 import EventsPanel from './admin/EventsPanel';
 
+// Giao diện SaaS sáng cho toàn bộ trang Admin (nền phẳng, thẻ trắng viền mảnh, màu nhấn cam như trang người dùng)
 export default function Admin() {
   const [activeMenu, setActiveMenu] = useState('events');
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'monitoring', label: 'Scraper Monitoring' },
-    { id: 'events', label: 'Event Management' },
-    { id: 'tracking', label: 'Tracked Products' },
-    { id: 'users', label: 'User Management' },
-    { id: 'settings', label: 'System Settings' },
+    { id: 'dashboard', label: 'Dashboard', subtitle: 'How people are using ePriTracker' },
+    { id: 'monitoring', label: 'Scraper Monitoring', subtitle: 'Health of the scrapers and background jobs' },
+    { id: 'events', label: 'Event Management', subtitle: 'Tiki events you publish and events the other platforms publish automatically' },
+    { id: 'tracking', label: 'Tracked Products', soon: true },
+    { id: 'users', label: 'User Management', soon: true },
+    { id: 'settings', label: 'System Settings', soon: true },
   ];
+  const current = menuItems.find(m => m.id === activeMenu);
 
   // Đăng xuất: xoá phiên trong localStorage (giống nút Logout ở trang người dùng) rồi về trang đăng nhập
   const handleLogout = () => {
@@ -25,45 +27,44 @@ export default function Admin() {
 
   return (
     <>
-      {/* ... Style, Sidebar, Background Video sections stay the same ... */}
       <style>{`
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
       `}</style>
 
-      <div className="fixed inset-0 w-full h-full z-0 bg-[#0f172a]">
-        <video autoPlay muted loop playsInline className="w-full h-full object-cover opacity-40">
-          <source src="/theme.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a]/80 to-[#0f172a]/95 w-full h-full"></div>
-      </div>
-
-      <div className="relative z-10 flex h-screen font-sans text-slate-200">
-
-        {/* ... Paste your Aside Sidebar section here ... */}
-        <aside className="w-72 flex flex-col bg-[#0f172a]/60 backdrop-blur-xl border-r border-slate-700/50 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
-          <div className="p-6 border-b border-slate-700/50">
-            <h1 className="text-3xl font-urbanist font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-rose-400 drop-shadow-md">ePriTracker</h1>
-            <p className="text-xs font-syne text-slate-400 mt-2 uppercase tracking-widest">Admin Panel</p>
+      <div className="flex h-screen bg-[#f7f7f5] font-sans text-slate-800">
+        <aside className="w-72 flex flex-col bg-white border-r border-slate-200">
+          <div className="p-6 border-b border-slate-200">
+            <h1 className="text-3xl font-urbanist font-bold text-orange-500">ePriTracker</h1>
+            <p className="text-xs font-syne mt-2 uppercase tracking-widest text-slate-500">Admin Panel</p>
           </div>
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveMenu(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all duration-300 font-syne font-medium ${activeMenu === item.id ? 'bg-slate-800/80 text-white border border-slate-600/50 shadow-[0_0_15px_rgba(14,165,233,0.15)] translate-x-1' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 hover:translate-x-1'
-                  }`}
-              >
-                {item.label}
-              </button>
-            ))}
+          <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+            {menuItems.map((item) => {
+              const active = activeMenu === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveMenu(item.id)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors duration-200 font-syne font-medium border ${active
+                    ? 'bg-orange-50 text-orange-700 border-orange-200'
+                    : 'text-slate-600 border-transparent hover:bg-slate-100 hover:text-slate-900'}`}
+                >
+                  {item.label}
+                  {/* Mục chưa làm: ghi rõ để không bị tưởng là lỗi khi bấm vào thấy trống */}
+                  {item.soon && (
+                    <span className="ml-auto rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Soon</span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
-          <div className="p-4 border-t border-slate-700/50">
+          <div className="p-4 border-t border-slate-200">
             <button
               onClick={handleLogout}
-              className="w-full px-4 py-3.5 rounded-xl text-left font-syne font-medium text-rose-400 border border-transparent transition-all duration-300 hover:bg-rose-900/30 hover:border-rose-800/60 hover:translate-x-1"
+              className="w-full px-4 py-3 rounded-xl text-left font-syne font-medium text-rose-600 border border-transparent transition-colors duration-200 hover:bg-rose-50 hover:border-rose-200"
             >
               Log out
             </button>
@@ -71,20 +72,25 @@ export default function Admin() {
         </aside>
 
         <main className="flex-1 p-8 overflow-y-auto">
-          {/* Header */}
-          <header className="flex justify-between items-center mb-10">
-            <div>
-              <h2 className="text-3xl font-urbanist font-bold text-white drop-shadow-sm">{menuItems.find(m => m.id === activeMenu)?.label}</h2>
-            </div>
+          <header className="mb-8">
+            <h2 className="text-3xl font-urbanist font-bold text-slate-900">{current?.label}</h2>
+            {current?.subtitle && <p className="mt-1 text-sm text-slate-500">{current.subtitle}</p>}
           </header>
 
           {activeMenu === 'dashboard' && <StatsPanel />}
           {activeMenu === 'monitoring' && <MonitoringPanel />}
 
-          {/* Giữ panel sự kiện trong cây (chỉ ẩn) để danh sách đã quét không mất khi chuyển tab – như trước khi tách file */}
+          {/* Giữ panel sự kiện trong cây (chỉ ẩn) để danh sách đã quét không mất khi chuyển tab */}
           <div className={activeMenu === 'events' ? '' : 'hidden'}>
             <EventsPanel />
           </div>
+
+          {current?.soon && (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
+              <p className="text-base font-semibold text-slate-900">{current.label} is coming soon</p>
+              <p className="mt-1 text-sm text-slate-500">This section is planned but not built yet.</p>
+            </div>
+          )}
         </main>
       </div>
     </>

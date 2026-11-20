@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { getErrorMessage } from '../../api/client';
 import { crawlPreviewEvents, deleteEvent, postEvent, togglePublishEvent } from '../../api/eventApi';
+import { RefreshCw } from 'lucide-react';
+import { LoadingRow, PANEL, Pill } from './ui';
 
 // Sự kiện Tiki: Admin xem trước / đăng / gỡ / xoá (chuyển nguyên từ Admin.jsx, không đổi hành vi)
 export default function TikiEventsPanel() {
@@ -75,106 +77,93 @@ export default function TikiEventsPanel() {
   return (
     <div className="space-y-6">
 
-      <div className="flex justify-between items-center bg-[#0f172a]/85 p-6 rounded-2xl border border-slate-700/50 shadow-xl">
+      <div className={`${PANEL} flex flex-wrap justify-between items-center gap-4 p-6`}>
         <div>
-          <h3 className="text-xl font-urbanist font-bold text-white">Sync Events from Tiki</h3>
-          <p className="text-sm font-syne text-slate-400 mt-1">Scan the latest promotional campaigns on the homepage.</p>
+          <h3 className="text-base font-semibold text-slate-900">Sync events from Tiki</h3>
+          <p className="text-sm text-slate-500 mt-0.5">Scan the latest promotional campaigns on the Tiki homepage, then publish the ones you want.</p>
         </div>
 
         <button
           onClick={handleCrawlEvents}
           disabled={isCrawling}
-          className={`relative group inline-block overflow-hidden rounded-xl px-8 py-3 text-sm font-bold text-white transition-all duration-300 ${isCrawling ? 'bg-slate-700 cursor-not-allowed opacity-70' : 'bg-orange-500 hover:bg-orange-600 hover:scale-105 shadow-[0_0_20px_rgba(249,115,22,0.4)]'
-            }`}
+          className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
         >
-          <span className="relative font-syne z-10">{isCrawling ? 'FETCHING EVENTS...' : 'FETCH EVENTS'}</span>
+          <RefreshCw size={16} className={isCrawling ? 'animate-spin' : ''} aria-hidden="true" />
+          {isCrawling ? 'Fetching events…' : 'Fetch events'}
         </button>
       </div>
 
-      <div className="bg-[#0f172a]/85 rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-800/60 text-slate-300 text-sm font-syne border-b border-slate-700/50">
-              <th className="p-5 font-semibold">Image</th>
-              <th className="p-5 font-semibold">Event Name</th>
-              <th className="p-5 font-semibold text-center">Status</th>
-              <th className="p-5 font-semibold text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm font-syne">
-            {previewEvents.map((evt, idx) => {
+      <div className={`${PANEL} overflow-hidden`}>
+        {previewEvents.length === 0 ? (
+          <LoadingRow text={isCrawling ? 'Fetching events from Tiki…' : 'Fetch events to review and publish Tiki campaigns.'} />
+        ) : (
+          <table className="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                <th className="px-5 py-3 font-medium">Image</th>
+                <th className="px-5 py-3 font-medium">Event</th>
+                <th className="px-5 py-3 font-medium text-center">Status</th>
+                <th className="px-5 py-3 font-medium text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {previewEvents.map((evt, idx) => {
+                const isSavedInDb = evt.eventId && evt.eventId !== "00000000-0000-0000-0000-000000000000";
+                const isPublished = evt.isPublished === true;
+                const isExpired = evt.isExpired === true;
 
-              // STATUS DISPLAY LOGIC
-              // const dbInfo = dbEventsMap[evt.tikiEventId]; // Get this event's DB info
-              const isSavedInDb = evt.eventId && evt.eventId !== "00000000-0000-0000-0000-000000000000";
-              const isPublished = evt.isPublished === true;
-              const isExpired = evt.isExpired === true;
-
-              return (
-                <tr key={idx} className="border-b border-slate-700/30 hover:bg-white/5 transition-colors duration-200">
-                  <td className="p-5">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-600/50">
-                      <img src={evt.imageUrl} alt={evt.title} className="w-full h-full object-cover" />
-                    </div>
-                  </td>
-                  <td className="p-5">
-                    <p className="text-white font-medium text-base mb-1">{evt.title}</p>
-                    <a href={evt.eventLink} target="_blank" rel="noreferrer" className="text-cyan-400 hover:text-cyan-300 hover:underline text-xs truncate block max-w-xs transition-colors">
-                      {evt.eventLink}
-                    </a>
-                  </td>
-                  <td className="p-5 text-center">
-                    {isExpired ? (
-                      <span className="px-3 py-1.5 bg-slate-800/80 border border-slate-600 text-slate-400 rounded-lg text-xs font-bold tracking-wide">EXPIRED</span>
-                    ) : !isSavedInDb ? (
-                      <span className="px-3 py-1.5 bg-cyan-900/40 border border-cyan-800 text-cyan-400 rounded-lg text-xs font-bold tracking-wide">PENDING REVIEW</span>
-                    ) : isPublished ? (
-                      <span className="px-3 py-1.5 bg-emerald-900/40 border border-emerald-800 text-emerald-400 rounded-lg text-xs font-bold tracking-wide">LIVE</span>
-                    ) : (
-                      <span className="px-3 py-1.5 bg-rose-900/40 border border-rose-800 text-rose-400 rounded-lg text-xs font-bold tracking-wide line-through">HIDDEN</span>
-                    )}
-                    {/* Số sản phẩm cào được gần nhất (null = chưa cào) – 0 thì người dùng mở sự kiện sẽ thấy trống */}
-                    {!isExpired && evt.liveProductCount === 0 && (
-                      <span className="mt-2 block text-[11px] font-bold tracking-wide text-amber-400" title="Trang này hiện không có sản phẩm (trang mã giảm giá hoặc chưa mở bán)">
-                        ⚠ NO PRODUCTS
-                      </span>
-                    )}
-                    {!isExpired && evt.liveProductCount > 0 && (
-                      <span className="mt-2 block text-[11px] text-slate-400">{evt.liveProductCount} products</span>
-                    )}
-                  </td>
-                  <td className="p-5 text-center">
-                    {isExpired ? (
-                      <button
-                        onClick={() => handleDeleteEvent(evt.eventId)}
-                        className="px-5 py-2 rounded-lg font-bold text-xs tracking-wider transition-all duration-300 border bg-slate-800/50 text-slate-400 border-slate-600 hover:bg-rose-900/60 hover:text-rose-400 hover:border-rose-800 shadow-sm"
-                      >
-                        DELETE
-                      </button>
-                    ) : !isSavedInDb ? (
-                      <button
-                        onClick={() => handlePostEvent(evt)}
-                        className="px-5 py-2 rounded-lg font-bold text-xs tracking-wider transition-all duration-300 border bg-cyan-900/30 text-cyan-400 border-cyan-800 hover:bg-cyan-900/60 hover:shadow-[0_0_15px_rgba(34,211,238,0.2)]"
-                      >
-                        PUBLISH NOW
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleTogglePublish(evt.eventId)}
-                        className={`px-5 py-2 rounded-lg font-bold text-xs tracking-wider transition-all duration-300 border ${isPublished
-                          ? 'bg-rose-900/30 text-rose-400 border-rose-800 hover:bg-rose-900/60 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)]'
-                          : 'bg-emerald-900/30 text-emerald-400 border-emerald-800 hover:bg-emerald-900/60 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                          }`}
-                      >
-                        {isPublished ? 'UNPUBLISH' : 'REPUBLISH'}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                return (
+                  <tr key={idx} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 bg-white">
+                        <img src={evt.imageUrl} alt={evt.title} className="w-full h-full object-cover" />
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-slate-900 font-medium mb-1">{evt.title}</p>
+                      <a href={evt.eventLink} target="_blank" rel="noreferrer" className="text-sky-700 hover:underline text-xs truncate block max-w-xs">
+                        {evt.eventLink}
+                      </a>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      {isExpired ? <Pill>Expired</Pill>
+                        : !isSavedInDb ? <Pill tone="info">Pending review</Pill>
+                        : isPublished ? <Pill tone="good">Live</Pill>
+                        : <Pill tone="bad">Hidden</Pill>}
+                      {/* Số sản phẩm cào được gần nhất (null = chưa cào) – 0 thì người dùng mở sự kiện sẽ thấy trống */}
+                      {!isExpired && evt.liveProductCount === 0 && (
+                        <span className="mt-2 block text-xs font-medium text-amber-800" title="Trang này hiện không có sản phẩm (trang mã giảm giá hoặc chưa mở bán)">
+                          No products
+                        </span>
+                      )}
+                      {!isExpired && evt.liveProductCount > 0 && (
+                        <span className="mt-2 block text-xs text-slate-500">{evt.liveProductCount} products</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      {isExpired ? (
+                        <button onClick={() => handleDeleteEvent(evt.eventId)}
+                          className="px-3.5 py-1.5 rounded-lg text-sm font-medium border border-rose-200 text-rose-700 hover:bg-rose-50">
+                          Delete
+                        </button>
+                      ) : !isSavedInDb ? (
+                        <button onClick={() => handlePostEvent(evt)}
+                          className="px-3.5 py-1.5 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600">
+                          Publish
+                        </button>
+                      ) : (
+                        <button onClick={() => handleTogglePublish(evt.eventId)}
+                          className="px-3.5 py-1.5 rounded-lg text-sm font-medium border border-slate-300 text-slate-700 hover:bg-slate-50">
+                          {isPublished ? 'Unpublish' : 'Republish'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
