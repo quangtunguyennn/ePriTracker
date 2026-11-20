@@ -1,8 +1,10 @@
 // src/layouts/HomeLayout.jsx
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 export default function HomeLayout() {
+  // Mỗi lần đổi trang, phần nội dung hiện dần (Navbar/Footer đứng yên) – xem .anim-page trong index.css
+  const { pathname } = useLocation();
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Navbar luôn xuất hiện ở trên cùng của mọi trang dùng layout này */}
@@ -10,7 +12,9 @@ export default function HomeLayout() {
 
       {/* Vị trí <Outlet /> này sẽ tự động biến thành nội dung của Home hoặc Products */}
       <main className="flex-grow">
-        <Outlet />
+        <div key={pathname} className="anim-page">
+          <Outlet />
+        </div>
       </main>
 
       {/* Footer luôn xuất hiện ở dưới cùng của mọi trang */}

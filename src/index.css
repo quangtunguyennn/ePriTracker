@@ -20,3 +20,61 @@
   --font-mtd : "Momo Trust Display", sans-serif;
 }
 
+
+/* 3. Chuyển động "tĩnh lặng" dùng chung cho trang người dùng
+   – chỉ opacity + transform, ngắn (150–250ms), một đường cong chậm dần, không nảy
+   – fill-mode "backwards": hết hiệu ứng là trả lại style gốc (không để transform thừa ảnh hưởng position: fixed/sticky bên trong)
+   – máy bật "giảm chuyển động" thì tắt hết (cuối file) */
+:root {
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 250ms;
+}
+
+@keyframes epri-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes epri-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes epri-pop {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes epri-ring {
+  from { box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.9); }
+  to { box-shadow: 0 0 0 2px rgba(249, 115, 22, 0); }
+}
+@keyframes epri-shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* Nội dung trang mới (đặt trên phần thay đổi khi chuyển trang) */
+.anim-page { animation: epri-enter var(--dur-slow) var(--ease-out-soft) backwards; }
+
+/* Thẻ trong lưới hiện lần lượt: đặt style={{ "--i": index }} (giới hạn ~12 thẻ đầu ở nơi dùng) */
+.anim-item { animation: epri-enter var(--dur-slow) var(--ease-out-soft) backwards; animation-delay: calc(var(--i, 0) * 30ms); }
+
+/* Dropdown / popover */
+.anim-pop { transform-origin: top right; animation: epri-pop var(--dur-fast) var(--ease-out-soft) backwards; }
+
+/* Thẻ vừa thêm: hiện dần + loé viền cam một lần */
+.anim-new { animation: epri-enter var(--dur-slow) var(--ease-out-soft) backwards, epri-ring 900ms ease-out var(--dur-slow); border-radius: 1rem; }
+
+/* Thẻ đang bị xoá: mờ đi và co nhẹ, rồi mới gỡ khỏi danh sách */
+.anim-exit { transition: opacity var(--dur-fast) ease-in, transform var(--dur-fast) ease-in; opacity: 0; transform: scale(0.98); pointer-events: none; }
+
+/* Khung xương khi đang tải */
+.skeleton { background: #e2e8f0; border-radius: 0.5rem; animation: epri-shimmer 1.4s ease-in-out infinite; }
+
+/* Vùng đang tải lại (vd làm mới gợi ý): mờ bớt, giữ bố cục */
+.is-refreshing { opacity: 0.5; transition: opacity var(--dur-base) ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-page, .anim-item, .anim-pop, .anim-new, .skeleton { animation: none; }
+  .anim-exit, .is-refreshing { transition: none; }
+}

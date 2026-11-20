@@ -53,7 +53,7 @@ export default function UserDropdownMenu() {
   };
 
   return (
-    <div className="absolute right-0 top-14 w-56 bg-white border border-gray-100 rounded-xl shadow-xl ring-1 ring-black/5 overflow-hidden font-lexend z-50">
+    <div className="anim-pop absolute right-0 top-14 w-56 bg-white border border-gray-100 rounded-xl shadow-xl ring-1 ring-black/5 overflow-hidden font-lexend z-50">
       
       {/* 1. Loading State */}
       {isLoading ? (

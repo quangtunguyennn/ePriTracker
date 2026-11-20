@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import PlatformBadge from "./PlatformBadge";
 import StockBadge from "./StockBadge";
+import DelistedBadge from "./DelistedBadge";
 
 export default function ProductItem({
   productId,
@@ -15,6 +16,8 @@ export default function ProductItem({
   platform,
   isInStock = true,
   outOfStockSince,
+  isDelisted = false,
+  delistedAt,
   onDelete,
 }) {
   // Format date cleanly for English Enterprise standard (e.g., "Aug 11, 2026, 10:19 PM")
@@ -42,13 +45,15 @@ export default function ProductItem({
             src={image || "/placeholder-product.png"}
             alt={productName}
             loading="lazy"
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+            className={`w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out ${isDelisted ? "grayscale opacity-70" : ""}`}
           />
         </Link>
 
-        {/* Live Status Badge – hết hàng thì hiện nhãn hết hàng (vẫn tiếp tục theo dõi) */}
+        {/* Live Status Badge – sàn đã gỡ > hết hàng (vẫn theo dõi) > đang theo dõi */}
         <div className="absolute top-3 left-3 z-10">
-          {isInStock ? (
+          {isDelisted ? (
+            <DelistedBadge isDelisted delistedAt={delistedAt} compact />
+          ) : isInStock ? (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-[12px] font-medium font-syne text-white shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Tracking

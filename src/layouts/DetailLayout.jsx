@@ -1,9 +1,11 @@
 // src/layouts/DetailLayout.jsx
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import NavbarProductDetail from "../components/NavbarProductDetail";
 import Footer from "../components/Footer";
 
 export default function DetailLayout() {
+  // Mỗi lần đổi trang, phần nội dung hiện dần (Navbar/Footer đứng yên) – xem .anim-page trong index.css
+  const { pathname } = useLocation();
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
   
@@ -12,7 +14,9 @@ export default function DetailLayout() {
 
       {/* Vị trí <Outlet /> này sẽ tự động biến thành nội dung của Home hoặc Products */}
       <main className="flex-grow container mx-auto px-4 py-8">
-        <Outlet />
+        <div key={pathname} className="anim-page">
+          <Outlet />
+        </div>
       </main>
 
       {/* Footer luôn xuất hiện ở dưới cùng của mọi trang */}

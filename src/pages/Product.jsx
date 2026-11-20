@@ -13,6 +13,7 @@ import {
   faFilter,
 } from "@fortawesome/free-solid-svg-icons";
 import ProductItem from "../components/ProductItem";
+import { ProductCardSkeleton, SkeletonGrid } from "../components/CardSkeletons";
 
 // Import thư viện thông báo góc phải và modal xác nhận
 import toast, { Toaster } from "react-hot-toast";
@@ -25,17 +26,24 @@ export default function Product() {
   const [linkProduct, setLinkProduct] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Hiệu ứng: thẻ vừa thêm (loé viền cam một lần) và thẻ đang xoá (mờ đi rồi mới gỡ) – .anim-new / .anim-exit trong index.css
+  const [newIds, setNewIds] = useState(() => new Set());
+  const [removingIds, setRemovingIds] = useState(() => new Set());
 
   // 2. Fetch product list
-  const fetchProducts = async () => {
+  // silent = true: tải lại ngầm (sau khi thêm) – không hiện khung xương, giữ nguyên lưới để chỉ thẻ mới có hiệu ứng
+  const fetchProducts = async (silent = false) => {
     try {
-      setLoading(true);
-      setProducts(await getTrackedProducts());
+      if (!silent) setLoading(true);
+      const list = await getTrackedProducts();
+      setProducts(list);
+      return list;
     } catch (error) {
       console.error("Error loading product list:", error);
       toast.error("Failed to load products.");
+      return null;
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -104,7 +112,13 @@ export default function Product() {
       });
 
       setLinkProduct("");
-      fetchProducts();
+      const before = new Set(products.map((p) => p.productId));
+      const list = await fetchProducts(true);
+      const added = (list ?? []).filter((p) => !before.has(p.productId)).map((p) => p.productId);
+      if (added.length > 0) {
+        setNewIds(new Set(added));
+        setTimeout(() => setNewIds(new Set()), 1200);
+      }
     } catch (error) {
       // BE trả { message } cho lỗi nghiệp vụ; lỗi khác (vd 400 validation) là object → không ghép thẳng vào chuỗi
       const data = error.response?.data;
@@ -153,7 +167,16 @@ export default function Product() {
 
     try {
       await deleteProduct(id);
-      setProducts((prev) => prev.filter((p) => p.productId !== id)); // Optimistic UI update
+      // Mờ thẻ đi (150ms) rồi mới gỡ khỏi danh sách
+      setRemovingIds((prev) => new Set(prev).add(id));
+      setTimeout(() => {
+        setProducts((prev) => prev.filter((p) => p.productId !== id));
+        setRemovingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }, 150);
       toast.success("Product deleted successfully!");
     } catch (error) {
       toast.error(error.response?.data?.message || "Delete failed!");
@@ -345,13 +368,12 @@ export default function Product() {
         {/* SECTION 3: PRODUCT GRID */}
         <div>
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <FontAwesomeIcon
-                icon={faSpinner}
-                className="animate-spin text-4xl text-orange-500 mb-4"
-              />
-              <p className="text-gray-500 text-lg">Loading products...</p>
-            </div>
+            <SkeletonGrid
+              count={8}
+              Card={ProductCardSkeleton}
+              label="Loading products…"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            />
           ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl border-dashed">
               <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
@@ -370,10 +392,11 @@ export default function Product() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((item) => (
+              {filteredProducts.map((item, index) => (
                 <div
                   key={item.productId}
-                  className="flex justify-center transition-transform hover:-translate-y-1 duration-300"
+                  className={`${newIds.has(item.productId) ? "anim-new" : "anim-item"} ${removingIds.has(item.productId) ? "anim-exit" : ""} flex justify-center transition-transform hover:-translate-y-1 duration-300`}
+                  style={{ "--i": Math.min(index, 11) }}
                 >
                   <ProductItem
                     productId={item.productId}
@@ -395,6 +418,8 @@ export default function Product() {
                     platform={getPlatformFromUrl(item.productLink)}
                     isInStock={item.isInStock !== false}
                     outOfStockSince={item.outOfStockSince}
+                    isDelisted={item.isDelisted === true}
+                    delistedAt={item.delistedAt}
                     onDelete={() => handleDeleteProduct(item.productId)}
                   />
                 </div>
