@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import PlatformBadge from "../components/PlatformBadge";
 import StockBadge from "../components/StockBadge";
+import DelistedBadge from "../components/DelistedBadge";
 import { getPlatformFromUrl } from "../utils/platform";
 import toast, { Toaster } from "react-hot-toast"; // 🟢 Import react-hot-toast
 import {
@@ -997,13 +998,38 @@ export default function Detail() {
                       Product Detail
                     </span>
                     <PlatformBadge platform={getPlatformFromUrl(product.productLink)} />
-                    <StockBadge isInStock={product.isInStock} outOfStockSince={product.outOfStockSince} />
+                    {product.isDelisted ? (
+                      <DelistedBadge isDelisted delistedAt={product.delistedAt} />
+                    ) : (
+                      <StockBadge isInStock={product.isInStock} outOfStockSince={product.outOfStockSince} />
+                    )}
                   </div>
                   <h1 className="font-questrial text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-slate-900 break-words">
                     {product.productName}
                   </h1>
                 </div>
               </div>
+
+              {/* Sàn đã gỡ sản phẩm: ngưng cập nhật giá – gợi ý tìm sản phẩm thay thế (có thể là cùng sản phẩm với link mới) */}
+              {product.isDelisted && (
+                <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                  <div className="text-sm text-slate-600 font-syne">
+                    <p className="font-bold text-slate-800 mb-1">This product is no longer available on the platform.</p>
+                    <p>
+                      Price tracking stopped
+                      {product.delistedAt ? ` on ${new Date(product.delistedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}.
+                      The price below is the last one we recorded. You can remove it from your list or look for an alternative to track instead.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById("suggestion")?.scrollIntoView({ behavior: "smooth" })}
+                    className="shrink-0 px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold font-syne shadow-sm transition-colors"
+                  >
+                    Find alternatives
+                  </button>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
                 <div className="lg:col-span-5 relative w-full aspect-square bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 flex items-center justify-center p-6 group">
@@ -1033,7 +1059,7 @@ export default function Detail() {
                       {product.latestPrice > 0 && (
                         <div className="min-w-0 sm:text-right">
                           <span className="text-[11px] text-orange-600 uppercase font-bold tracking-wider mb-1.5 block">
-                            {product.isInStock === false ? "Last Known Price" : "Current Market Price"}
+                            {product.isDelisted || product.isInStock === false ? "Last Known Price" : "Current Market Price"}
                           </span>
                           <span
                             title={`${product.latestPrice} ₫`}

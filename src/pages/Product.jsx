@@ -395,6 +395,8 @@ export default function Product() {
                     platform={getPlatformFromUrl(item.productLink)}
                     isInStock={item.isInStock !== false}
                     outOfStockSince={item.outOfStockSince}
+                    isDelisted={item.isDelisted === true}
+                    delistedAt={item.delistedAt}
                     onDelete={() => handleDeleteProduct(item.productId)}
                   />
                 </div>
