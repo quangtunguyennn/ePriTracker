@@ -21,7 +21,7 @@ export default function Footer() {
 
               {/* <div className="bg-mist-50 rounded-full flex items-center justify-center p-4">
 
-                <img className="w-8 h-8 object-contain" src="paypal.png" />
+                <img className="w-8 h-8 object-contain" src="/paypal.png" />
 
               </div> */}
             </div>
@@ -121,7 +121,7 @@ export default function Footer() {
         </div>
 
         <div className="text-white w-1/4">
-          <img src="f-2.png" alt="" />
+          <img src="/f-2.png" alt="" />
         </div>
       </div>
     </>
