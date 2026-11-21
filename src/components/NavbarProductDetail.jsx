@@ -1,5 +1,7 @@
 // src/components/NavbarProductDetail.jsx
 import { Link } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
+import { isLoggedIn } from "../api/authStorage";
 export default function NavbarProductDetail() {
   // Hàm xử lý cuộn trang mượt mà
   const scrollToSection = (id) => {
@@ -17,6 +19,10 @@ export default function NavbarProductDetail() {
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm px-4 py-4 transition-all">
+      {/* Chuông thông báo ở góc phải (màn hình rộng); menu mục lục vẫn căn giữa */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block">
+        <NotificationBell enabled={isLoggedIn()} />
+      </div>
       {/* Container giới hạn độ rộng và căn giữa */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-center items-center gap-4 md:gap-12">
         

@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import UserIcon from "./UserIcon"; // Component UserDropdownMenu của bạn
+import NotificationBell from "./NotificationBell";
 import { isLoggedIn as hasToken } from "../api/authStorage";
 
 export default function Navbar() {
@@ -72,22 +73,14 @@ export default function Navbar() {
             <img
               onClick={toggleUserMenu}
               className="w-8 h-8 object-contain cursor-pointer"
-              src="user.svg"
+              src="/user.svg"
               alt="User Menu"
             />
             {isUserIconClicked && <UserIcon />}
           </div>
 
-          {/* 4. Ẩn/hiện icon thông báo dựa trên trạng thái đăng nhập */}
-          {isLoggedIn && (
-            <div>
-              <img
-                className="w-7 h-7 object-contain cursor-pointer"
-                src="notify.svg"
-                alt="Notifications"
-              />
-            </div>
-          )}
+          {/* 4. Chuông thông báo (chỉ khi đã đăng nhập) – số chưa đọc cập nhật realtime qua SignalR */}
+          <NotificationBell enabled={isLoggedIn} />
         </div>
       </div>
     </nav>
