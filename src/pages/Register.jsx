@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { register } from "../api/authApi";
+import { withRedirect } from "../utils/redirect";
 import {
   Mail,
   Lock,
@@ -24,6 +25,9 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+  // Giữ trang đang xem dở (vd khách bấm "Track Deal") qua bước đăng ký → đăng nhập
+  const [searchParams] = useSearchParams();
+  const loginPath = withRedirect("/login", searchParams.get("redirect"));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +42,7 @@ export default function Register() {
       // Hiển thị thông báo thành công và chuyển hướng về trang login sau 2 giây
       setSuccess("Account created successfully! Redirecting to login...");
       setTimeout(() => {
-        navigate("/login");
+        navigate(loginPath);
       }, 2000);
 
     } catch (err) {
@@ -226,7 +230,7 @@ export default function Register() {
             <div className="text-center pt-2">
               <span className="text-sm text-slate-500">Already have an account? </span>
               <Link
-                to="/login"
+                to={loginPath}
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
               >
                 Sign in here
