@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { login } from "../api/authApi";
 import { saveAuth } from "../api/authStorage";
+import { safeRedirect, withRedirect } from "../utils/redirect";
 import {
   Mail,
   Lock,
@@ -9,6 +10,7 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
+  ArrowRight,
 } from "lucide-react";
 
 export default function Login() {
@@ -20,6 +22,9 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+  // Khách bấm "Track Deal" ở trang sự kiện → đăng nhập xong quay lại đúng trang đó
+  const [searchParams] = useSearchParams();
+  const redirect = safeRedirect(searchParams.get("redirect"));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,11 +40,9 @@ export default function Login() {
       // Kiểm tra quyền bằng .includes()
       if (userRoles?.includes("Admin")) {
         navigate("/admin");
-      } else if (userRoles?.includes("User")) {
-        navigate("/");
       } else {
-        // Fallback (Trường hợp tài khoản không có role nào)
-        navigate("/");
+        // User (hoặc tài khoản không có role nào): về trang đang xem dở nếu có, không thì trang chủ
+        navigate(redirect ?? "/");
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -192,12 +195,26 @@ export default function Login() {
                 Don't have an account?{" "}
               </span>
               <Link
-                to="/register"
+                to={withRedirect("/register", redirect)}
                 className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
               >
                 Sign up
               </Link>
             </div>
+
+            {/* Bỏ qua đăng nhập: khách vẫn xem được sự kiện; quay về trang đang xem dở nếu có */}
+            <div className="flex items-center gap-3 pt-2">
+              <div className="h-px flex-1 bg-slate-200" />
+              <span className="text-xs uppercase tracking-wider text-slate-400">or</span>
+              <div className="h-px flex-1 bg-slate-200" />
+            </div>
+            <Link
+              to={redirect ?? "/events"}
+              className="w-full inline-flex justify-center items-center gap-2 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
+            >
+              Continue as guest
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </form>
         </div>
       </div>

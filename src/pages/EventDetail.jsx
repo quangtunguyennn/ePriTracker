@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { getLiveEventProducts, getPublishedEvents } from "../api/eventApi";
 import { getErrorMessage } from "../api/client";
+import { isLoggedIn } from "../api/authStorage";
+import { withRedirect } from "../utils/redirect";
 import PlatformBadge from "../components/PlatformBadge";
 import { getEventEndLabel } from "../utils/eventTime";
 import { parseTargetPrice, validateTargetPrice } from "../utils/targetPrice";
@@ -18,8 +20,26 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import Swal from "sweetalert2";
 
+// Khách xem sự kiện chỉ đọc dữ liệu có sẵn; BE trả 503 khi sản phẩm còn đang được tải từ sàn → tự thử lại
+const LOADING_RETRY_MS = 15000;
+const LOADING_MAX_RETRIES = 8; // ~2 phút
+
+// Kiểu popup dùng chung (đặt giá mục tiêu, yêu cầu đăng nhập)
+const POPUP_CLASSES = {
+  container: "!font-sans",
+  popup: "!rounded-3xl !shadow-2xl !border !border-slate-100 !p-8 !bg-white !max-w-lg !w-full",
+  title: "!text-3xl !font-bold !font-urbanist !text-slate-900 !p-0 !m-0 !mt-2",
+  htmlContainer: "!text-base !font-questrial !text-slate-500 !mt-3 !mb-6 !p-0",
+  actions: "!flex !w-full !gap-4 !justify-center !mt-0 !p-0",
+  confirmButton: "!bg-[#ea580c] !font-questrial !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-xl !px-8 !py-3 !transition-all !shadow-sm",
+  cancelButton: "!bg-white !font-questrial !font-bold !cursor-pointer hover:!bg-slate-50 !text-slate-700 !rounded-xl !px-8 !py-3 !border !border-slate-200 !transition-all !shadow-sm",
+};
+
 export default function EventDetail() {
   const { eventId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [retryCount, setRetryCount] = useState(0);
   const [products, setProducts] = useState([]);
   const [event, setEvent] = useState(null); // tên, sàn, giờ kết thúc – lấy từ danh sách sự kiện
   const [loading, setLoading] = useState(true);
@@ -29,16 +49,25 @@ export default function EventDetail() {
   // State quản lý hiệu ứng loading cho nút Track của từng sản phẩm
   const [trackingId, setTrackingId] = useState(null);
 
+  // Đổi sự kiện → đếm lại số lần thử
   useEffect(() => {
+    setRetryCount(0);
+  }, [eventId]);
+
+  useEffect(() => {
+    let retryTimer;
     const fetchEventProducts = async () => {
       try {
-        setLoading(true);
+        if (retryCount === 0) setLoading(true); // lần tự thử lại: giữ thông báo "đang tải", không nháy khung xương
         setLoadError(null);
         setProducts(await getLiveEventProducts(eventId));
       } catch (error) {
         console.error("Error loading event products:", error);
         // BE báo lý do cụ thể: sự kiện chưa có sản phẩm, hoặc đang tải từ sàn (thử lại sau ít phút)
         setLoadError(getErrorMessage(error, "Failed to load products for this event."));
+        if (error.response?.status === 503 && retryCount < LOADING_MAX_RETRIES) {
+          retryTimer = setTimeout(() => setRetryCount((n) => n + 1), LOADING_RETRY_MS);
+        }
       } finally {
         setLoading(false);
       }
@@ -55,8 +84,9 @@ export default function EventDetail() {
     };
 
     fetchEventProducts();
-    fetchEventInfo();
-  }, [eventId]);
+    if (retryCount === 0) fetchEventInfo();
+    return () => clearTimeout(retryTimer);
+  }, [eventId, retryCount]);
 
   const endLabel = getEventEndLabel(event);
 
@@ -64,6 +94,34 @@ export default function EventDetail() {
   const handleTrackProduct = async (productLink, productId) => {
     if (!productLink) {
       toast.error("Cannot track this product: Missing product link.");
+      return;
+    }
+
+    // Khách chưa đăng nhập: hỏi trước, không đẩy thẳng sang trang đăng nhập; đăng nhập xong quay lại sự kiện này
+    if (!isLoggedIn()) {
+      const choice = await Swal.fire({
+        title: "Sign in to track this deal",
+        text: "Track prices and get alerted when this deal drops further. It only takes a moment.",
+        icon: "info",
+        iconColor: "#ea580c",
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: "Sign in",
+        denyButtonText: "Create account",
+        cancelButtonText: "Not now",
+        buttonsStyling: false,
+        reverseButtons: true,
+        focusConfirm: true,
+        customClass: {
+          ...POPUP_CLASSES,
+          actions: "!flex !flex-wrap !w-full !gap-3 !justify-center !mt-0 !p-0",
+          denyButton: POPUP_CLASSES.cancelButton,
+          cancelButton: "!bg-transparent !font-questrial !font-semibold !cursor-pointer !text-slate-500 hover:!text-slate-700 !px-4 !py-3",
+        },
+      });
+      const backHere = location.pathname + location.search;
+      if (choice.isConfirmed) navigate(withRedirect("/login", backHere));
+      else if (choice.isDenied) navigate(withRedirect("/register", backHere));
       return;
     }
 
@@ -91,15 +149,9 @@ export default function EventDetail() {
         backdrop-blur-sm
       `,
       customClass: {
-        container: "!font-sans",
-        popup: "!rounded-3xl !shadow-2xl !border !border-slate-100 !p-8 !bg-white !max-w-lg !w-full",
-        title: "!text-3xl !font-bold !font-urbanist !text-slate-900 !p-0 !m-0 !mt-2",
-        htmlContainer: "!text-base !font-questrial !text-slate-500 !mt-3 !mb-6 !p-0",
+        ...POPUP_CLASSES,
         validationMessage: "!text-center",
         input: "!border !border-slate-300 !rounded-2xl !px-4 !py-3 !text-lg !text-center !w-[85%] !mx-auto !block !mb-6 focus:!outline-none focus:!ring-2 focus:!ring-orange-500/20 focus:!border-orange-500",
-        actions: "!flex !w-full !gap-4 !justify-center !mt-0 !p-0",
-        confirmButton: "!bg-[#ea580c] !font-questrial !cursor-pointer hover:!bg-[#c2410c] !text-white !font-bold !rounded-xl !px-8 !py-3 !transition-all !shadow-sm",
-        cancelButton: "!bg-white !font-questrial !font-bold !cursor-pointer hover:!bg-slate-50 !text-slate-700 !rounded-xl !px-8 !py-3 !border !border-slate-200 !transition-all !shadow-sm",
       },
       inputValidator: validateTargetPrice,
     });
