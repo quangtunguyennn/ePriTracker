@@ -1,5 +1,6 @@
 import axios from "axios";
 import { clearAuth, getToken } from "./authStorage";
+import { getLanguage } from "../i18n";
 
 // Địa chỉ backend lấy từ biến môi trường (.env.development / .env.production),
 // thiếu thì dùng địa chỉ IIS Express mặc định khi chạy bằng Visual Studio
@@ -14,6 +15,8 @@ api.interceptors.request.use((config) => {
   if (token && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Backend trả câu lỗi (message) theo ngôn ngữ người dùng đang chọn
+  config.headers["Accept-Language"] = getLanguage();
   return config;
 });
 

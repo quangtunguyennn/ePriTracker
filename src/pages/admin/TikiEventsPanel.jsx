@@ -3,9 +3,11 @@ import { getErrorMessage } from '../../api/client';
 import { crawlPreviewEvents, deleteEvent, postEvent, togglePublishEvent } from '../../api/eventApi';
 import { RefreshCw } from 'lucide-react';
 import { LoadingRow, PANEL, Pill } from './ui';
+import { useTranslation } from 'react-i18next';
 
 // Sự kiện Tiki: Admin xem trước / đăng / gỡ / xoá (chuyển nguyên từ Admin.jsx, không đổi hành vi)
 export default function TikiEventsPanel() {
+  const { t } = useTranslation();
   const [isCrawling, setIsCrawling] = useState(false);
 
   const [previewEvents, setPreviewEvents] = useState([]);
@@ -18,9 +20,9 @@ export default function TikiEventsPanel() {
     } catch (error) {
       console.error(error);
       if (error.response) {
-        alert(`Error: ${getErrorMessage(error, 'Request failed')}`);
+        alert(t('Error: {{message}}', { message: getErrorMessage(error, t('Request failed')) }));
       } else {
-        alert('Unable to connect to the backend server!');
+        alert(t('Unable to connect to the backend server!'));
       }
     } finally {
       setIsCrawling(false);
@@ -31,13 +33,13 @@ export default function TikiEventsPanel() {
     try {
       // BE cào thử ngay sau khi đăng và báo số sản phẩm (0 = trang mã giảm giá / chưa mở bán → người dùng mở ra sẽ trống)
       const result = await postEvent(tikiEvent);
-      alert(result?.productCount === 0 ? `⚠️ ${result.message}` : `🎉 ${result?.message ?? 'Event published successfully!'}`);
+      alert(result?.productCount === 0 ? `⚠️ ${result.message}` : `🎉 ${result?.message ?? t('Event published successfully!')}`);
       // GỌI LẠI HÀM CRAWL ĐỂ LẤY EVENT ID MỚI NHẤT
       handleCrawlEvents();
     } catch (error) {
       console.error(error);
       if (error.response) {
-        alert(`Error: ${getErrorMessage(error, 'Request failed')}`);
+        alert(t('Error: {{message}}', { message: getErrorMessage(error, t('Request failed')) }));
       }
     }
   };
@@ -56,7 +58,7 @@ export default function TikiEventsPanel() {
 
   const handleDeleteEvent = async (eventId) => {
     // 1. Hiển thị cảnh báo để tránh Admin ấn nhầm
-    const isConfirm = window.confirm("Sự kiện này đã kết thúc trên Tiki. Bạn có chắc chắn muốn xóa nó khỏi hệ thống không?");
+    const isConfirm = window.confirm(t("This event has ended on Tiki. Are you sure you want to delete it from the system?"));
     if (!isConfirm) return;
 
     try {
@@ -67,9 +69,9 @@ export default function TikiEventsPanel() {
     } catch (error) {
       console.error(error);
       if (error.response) {
-        alert(`Lỗi khi xóa: ${getErrorMessage(error, 'Không rõ nguyên nhân')}`);
+        alert(t('Delete failed: {{message}}', { message: getErrorMessage(error, t('Unknown error')) }));
       } else {
-        alert('Network error: Không thể kết nối đến server!');
+        alert(t('Network error: Cannot connect to the server!'));
       }
     }
   };
@@ -79,8 +81,8 @@ export default function TikiEventsPanel() {
 
       <div className={`${PANEL} flex flex-wrap justify-between items-center gap-4 p-6`}>
         <div>
-          <h3 className="text-base font-semibold text-slate-900">Sync events from Tiki</h3>
-          <p className="text-sm text-slate-500 mt-0.5">Scan the latest promotional campaigns on the Tiki homepage, then publish the ones you want.</p>
+          <h3 className="text-base font-semibold text-slate-900">{t("Sync events from Tiki")}</h3>
+          <p className="text-sm text-slate-500 mt-0.5">{t("Scan the latest promotional campaigns on the Tiki homepage, then publish the ones you want.")}</p>
         </div>
 
         <button
@@ -89,21 +91,21 @@ export default function TikiEventsPanel() {
           className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
         >
           <RefreshCw size={16} className={isCrawling ? 'animate-spin' : ''} aria-hidden="true" />
-          {isCrawling ? 'Fetching events…' : 'Fetch events'}
+          {isCrawling ? t('Fetching events…') : t('Fetch events')}
         </button>
       </div>
 
       <div className={`${PANEL} overflow-hidden`}>
         {previewEvents.length === 0 ? (
-          <LoadingRow text={isCrawling ? 'Fetching events from Tiki…' : 'Fetch events to review and publish Tiki campaigns.'} />
+          <LoadingRow text={isCrawling ? t('Fetching events from Tiki…') : t('Fetch events to review and publish Tiki campaigns.')} />
         ) : (
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
-                <th className="px-5 py-3 font-medium">Image</th>
-                <th className="px-5 py-3 font-medium">Event</th>
-                <th className="px-5 py-3 font-medium text-center">Status</th>
-                <th className="px-5 py-3 font-medium text-center">Action</th>
+                <th className="px-5 py-3 font-medium">{t("Image")}</th>
+                <th className="px-5 py-3 font-medium">{t("Event")}</th>
+                <th className="px-5 py-3 font-medium text-center">{t("Status")}</th>
+                <th className="px-5 py-3 font-medium text-center">{t("Action")}</th>
               </tr>
             </thead>
             <tbody>
@@ -126,35 +128,35 @@ export default function TikiEventsPanel() {
                       </a>
                     </td>
                     <td className="px-5 py-4 text-center">
-                      {isExpired ? <Pill>Expired</Pill>
-                        : !isSavedInDb ? <Pill tone="info">Pending review</Pill>
-                        : isPublished ? <Pill tone="good">Live</Pill>
-                        : <Pill tone="bad">Hidden</Pill>}
+                      {isExpired ? <Pill>{t("Expired")}</Pill>
+                        : !isSavedInDb ? <Pill tone="info">{t("Pending review")}</Pill>
+                        : isPublished ? <Pill tone="good">{t("Live")}</Pill>
+                        : <Pill tone="bad">{t("Hidden")}</Pill>}
                       {/* Số sản phẩm cào được gần nhất (null = chưa cào) – 0 thì người dùng mở sự kiện sẽ thấy trống */}
                       {!isExpired && evt.liveProductCount === 0 && (
-                        <span className="mt-2 block text-xs font-medium text-amber-800" title="Trang này hiện không có sản phẩm (trang mã giảm giá hoặc chưa mở bán)">
-                          No products
+                        <span className="mt-2 block text-xs font-medium text-amber-800" title={t("This page has no products right now (coupon page or the sale has not started)")}>
+                          {t("No products")}
                         </span>
                       )}
                       {!isExpired && evt.liveProductCount > 0 && (
-                        <span className="mt-2 block text-xs text-slate-500">{evt.liveProductCount} products</span>
+                        <span className="mt-2 block text-xs text-slate-500">{t("{{count}} products", { count: evt.liveProductCount })}</span>
                       )}
                     </td>
                     <td className="px-5 py-4 text-center">
                       {isExpired ? (
                         <button onClick={() => handleDeleteEvent(evt.eventId)}
                           className="px-3.5 py-1.5 rounded-lg text-sm font-medium border border-rose-200 text-rose-700 hover:bg-rose-50">
-                          Delete
+                          {t("Delete")}
                         </button>
                       ) : !isSavedInDb ? (
                         <button onClick={() => handlePostEvent(evt)}
                           className="px-3.5 py-1.5 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600">
-                          Publish
+                          {t("Publish")}
                         </button>
                       ) : (
                         <button onClick={() => handleTogglePublish(evt.eventId)}
                           className="px-3.5 py-1.5 rounded-lg text-sm font-medium border border-slate-300 text-slate-700 hover:bg-slate-50">
-                          {isPublished ? 'Unpublish' : 'Republish'}
+                          {isPublished ? t('Unpublish') : t('Republish')}
                         </button>
                       )}
                     </td>

@@ -5,9 +5,12 @@ import { getAdminMonitoring } from '../../api/adminApi';
 import PlatformBadge from '../../components/PlatformBadge';
 import { ErrorBox, LoadingRow, PANEL, Panel, Pill, SECONDARY_BUTTON, StatCard } from './ui';
 import { formatAgo, formatDateTime, formatDuration, formatNumber, formatPercent } from './format';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 
 const REFRESH_MS = 30000;
 
+// Nhãn là câu tiếng Anh (khoá dịch) – dịch lúc hiển thị bằng t(...)
 const OPERATION_LABELS = {
   Product: 'Product page',
   Search: 'Search (suggestions)',
@@ -23,6 +26,7 @@ const JOB_LABELS = {
 
 // Tab "Scraper Monitoring": tự làm mới mỗi 30 giây khi đang mở tab
 export default function MonitoringPanel() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,7 +41,7 @@ export default function MonitoringPanel() {
       setError(null);
     } catch (err) {
       console.error(err);
-      setError(err.response ? getErrorMessage(err, 'Couldn\'t load monitoring data.') : 'Can\'t reach the backend server.');
+      setError(err.response ? getErrorMessage(err, i18n.t('Couldn\'t load monitoring data.')) : i18n.t('Can\'t reach the backend server.'));
     } finally {
       loadingRef.current = false;
       setLoading(false);
@@ -51,7 +55,7 @@ export default function MonitoringPanel() {
   }, [load]);
 
   if (error && !data) return <ErrorBox message={error} onRetry={load} />;
-  if (!data) return <LoadingRow text="Loading monitoring data…" />;
+  if (!data) return <LoadingRow text={t("Loading monitoring data…")} />;
 
   const totals = data.platforms.flatMap(p => p.operations).reduce(
     (acc, o) => ({ requests: acc.requests + o.requests, failures: acc.failures + o.failures }),
@@ -65,24 +69,24 @@ export default function MonitoringPanel() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-500">
-          Counters since server start {formatDateTime(data.metricsSince)} (kept in memory) · updated {formatAgo(data.generatedAt)} · refreshes every 30s
-          {error && <span className="ml-2 text-rose-700">· last refresh failed</span>}
+          {t("Counters since server start {{since}} (kept in memory) · updated {{updated}} · refreshes every 30s", { since: formatDateTime(data.metricsSince), updated: formatAgo(data.generatedAt) })}
+          {error && <span className="ml-2 text-rose-700">· {t("last refresh failed")}</span>}
         </p>
         <button onClick={load} disabled={loading} className={SECONDARY_BUTTON}>
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} aria-hidden="true" />
-          {loading ? 'Refreshing' : 'Refresh'}
+          {loading ? t('Refreshing') : t('Refresh')}
         </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Requests to platforms" value={formatNumber(totals.requests)}
-          hint={`Success rate ${formatPercent(totals.requests - totals.failures, totals.requests)}`} />
-        <StatCard label="Failed requests" value={formatNumber(totals.failures)}
-          hint={totals.failures > 0 ? 'See recent errors below' : 'No errors since server start'} tone={totals.failures > 0 ? 'bad' : 'default'} />
-        <StatCard label="Overdue / stale products" value={`${formatNumber(overdue)} / ${formatNumber(stale)}`}
-          hint="Past crawl schedule >15 min / no successful crawl >2 days" tone={overdue + stale > 0 ? 'warn' : 'default'} />
-        <StatCard label="Background jobs" value={data.jobsError ? '?' : `${data.jobs.length - failedJobs}/${data.jobs.length} OK`}
-          hint={data.jobCounts ? `${formatNumber(data.jobCounts.failed)} failed jobs kept by Hangfire` : data.jobsError}
+        <StatCard label={t("Requests to platforms")} value={formatNumber(totals.requests)}
+          hint={t("Success rate {{rate}}", { rate: formatPercent(totals.requests - totals.failures, totals.requests) })} />
+        <StatCard label={t("Failed requests")} value={formatNumber(totals.failures)}
+          hint={totals.failures > 0 ? t('See recent errors below') : t('No errors since server start')} tone={totals.failures > 0 ? 'bad' : 'default'} />
+        <StatCard label={t("Overdue / stale products")} value={`${formatNumber(overdue)} / ${formatNumber(stale)}`}
+          hint={t("Past crawl schedule >15 min / no successful crawl >2 days")} tone={overdue + stale > 0 ? 'warn' : 'default'} />
+        <StatCard label={t("Background jobs")} value={data.jobsError ? '?' : `${data.jobs.length - failedJobs}/${data.jobs.length} OK`}
+          hint={data.jobCounts ? t("{{count}} failed jobs kept by Hangfire", { count: formatNumber(data.jobCounts.failed) }) : data.jobsError}
           tone={data.jobsError || failedJobs ? 'bad' : 'default'} />
       </div>
 
@@ -91,11 +95,11 @@ export default function MonitoringPanel() {
       </div>
 
       <Panel
-        title="Background jobs"
-        subtitle="Scheduled with Hangfire"
+        title={t("Background jobs")}
+        subtitle={t("Scheduled with Hangfire")}
         actions={
           <a href={`${API_BASE_URL}/hangfire`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline underline-offset-4">
-            Open Hangfire dashboard <ExternalLink size={14} aria-hidden="true" />
+            {t("Open Hangfire dashboard")} <ExternalLink size={14} aria-hidden="true" />
           </a>
         }
       >
@@ -105,18 +109,18 @@ export default function MonitoringPanel() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="text-slate-500 border-b border-slate-200">
-                <th className="py-2 pr-4 font-medium">Job</th>
-                <th className="py-2 pr-4 font-medium">Schedule</th>
-                <th className="py-2 pr-4 font-medium">Last run</th>
-                <th className="py-2 pr-4 font-medium">Status</th>
-                <th className="py-2 font-medium">Next run</th>
+                <th className="py-2 pr-4 font-medium">{t("Job")}</th>
+                <th className="py-2 pr-4 font-medium">{t("Schedule")}</th>
+                <th className="py-2 pr-4 font-medium">{t("Last run")}</th>
+                <th className="py-2 pr-4 font-medium">{t("Status")}</th>
+                <th className="py-2 font-medium">{t("Next run")}</th>
               </tr>
             </thead>
             <tbody>
               {data.jobs.map(job => (
                 <tr key={job.id} className="border-b border-slate-100 last:border-0">
                   <td className="py-3 pr-4">
-                    <p className="text-slate-900">{JOB_LABELS[job.id] ?? job.id}</p>
+                    <p className="text-slate-900">{JOB_LABELS[job.id] ? t(JOB_LABELS[job.id]) : job.id}</p>
                     <p className="text-xs text-slate-500">{job.id}</p>
                     {job.error && <p className="text-xs text-rose-700">{job.error}</p>}
                   </td>
@@ -131,19 +135,19 @@ export default function MonitoringPanel() {
         )}
       </Panel>
 
-      <Panel title="Recent errors" subtitle={data.recentErrors.length ? `Latest ${data.recentErrors.length} failed requests, newest first` : 'Failed requests appear here'}>
+      <Panel title={t("Recent errors")} subtitle={data.recentErrors.length ? t("Latest {{count}} failed requests, newest first", { count: data.recentErrors.length }) : t('Failed requests appear here')}>
         {data.recentErrors.length === 0 ? (
-          <LoadingRow text="No errors since server start." />
+          <LoadingRow text={t("No errors since server start.")} />
         ) : (
           <div className="max-h-96 overflow-y-auto">
             <table className="w-full text-left text-sm">
               <thead className="sticky top-0 bg-white">
                 <tr className="text-slate-500 border-b border-slate-200">
-                  <th className="py-2 pr-4 font-medium">Time</th>
-                  <th className="py-2 pr-4 font-medium">Platform</th>
-                  <th className="py-2 pr-4 font-medium">Type</th>
-                  <th className="py-2 pr-4 font-medium">Target</th>
-                  <th className="py-2 font-medium">Error</th>
+                  <th className="py-2 pr-4 font-medium">{t("Time")}</th>
+                  <th className="py-2 pr-4 font-medium">{t("Platform")}</th>
+                  <th className="py-2 pr-4 font-medium">{t("Type")}</th>
+                  <th className="py-2 pr-4 font-medium">{t("Target")}</th>
+                  <th className="py-2 font-medium">{t("Error")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -151,7 +155,7 @@ export default function MonitoringPanel() {
                   <tr key={i} className="border-b border-slate-100 last:border-0 align-top">
                     <td className="py-2 pr-4 whitespace-nowrap text-slate-700" title={formatDateTime(e.at)}>{formatAgo(e.at)}</td>
                     <td className="py-2 pr-4"><PlatformBadge platform={e.platform} /></td>
-                    <td className="py-2 pr-4 text-slate-700 whitespace-nowrap">{OPERATION_LABELS[e.operation] ?? e.operation}</td>
+                    <td className="py-2 pr-4 text-slate-700 whitespace-nowrap">{OPERATION_LABELS[e.operation] ? t(OPERATION_LABELS[e.operation]) : e.operation}</td>
                     <td className="py-2 pr-4 text-slate-500 break-all max-w-xs">{e.target}</td>
                     <td className="py-2 text-rose-700 break-words max-w-md">{e.error}</td>
                   </tr>
@@ -166,12 +170,14 @@ export default function MonitoringPanel() {
 }
 
 function JobState({ state }) {
-  if (!state) return <Pill>Not run yet</Pill>;
+  const { t } = useTranslation();
+  if (!state) return <Pill>{t("Not run yet")}</Pill>;
   const tone = { Succeeded: 'good', Failed: 'bad', Processing: 'info', Enqueued: 'info', Scheduled: 'info' }[state] ?? 'default';
-  return <Pill tone={tone}>{state}</Pill>;
+  return <Pill tone={tone}>{t(state)}</Pill>;
 }
 
 function PlatformCard({ platform: p }) {
+  const { t } = useTranslation();
   const requests = p.operations.reduce((sum, o) => sum + o.requests, 0);
   const failures = p.operations.reduce((sum, o) => sum + o.failures, 0);
   const lastSuccess = p.operations.map(o => o.lastSuccessAt).filter(Boolean).sort().at(-1);
@@ -185,39 +191,39 @@ function PlatformCard({ platform: p }) {
       <div className="flex items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
           <PlatformBadge platform={p.platform} />
-          <Pill tone={status.tone}>{status.text}</Pill>
+          <Pill tone={status.tone}>{t(status.text)}</Pill>
         </div>
-        <p className="text-sm text-slate-500">Last success {formatAgo(lastSuccess)}</p>
+        <p className="text-sm text-slate-500">{t("Last success {{when}}", { when: formatAgo(lastSuccess) })}</p>
       </div>
 
       <div className="grid grid-cols-5 gap-2 mb-5">
-        <MiniStat label="Tracked" value={p.trackedProducts} />
-        <MiniStat label="Overdue" value={p.overdueProducts} warn />
-        <MiniStat label="Stale" value={p.staleProducts} warn />
-        <MiniStat label="Out of stock" value={p.outOfStockProducts} />
-        <MiniStat label="Delisted" value={p.delistedProducts ?? 0} warn />
+        <MiniStat label={t("Tracked")} value={p.trackedProducts} />
+        <MiniStat label={t("Overdue")} value={p.overdueProducts} warn />
+        <MiniStat label={t("Stale")} value={p.staleProducts} warn />
+        <MiniStat label={t("Out of stock")} value={p.outOfStockProducts} />
+        <MiniStat label={t("Delisted")} value={p.delistedProducts ?? 0} warn />
       </div>
 
       {p.operations.length === 0 ? (
-        <p className="text-sm text-slate-500">No requests since server start.</p>
+        <p className="text-sm text-slate-500">{t("No requests since server start.")}</p>
       ) : (
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="text-slate-500 border-b border-slate-200">
-              <th className="py-2 pr-2 font-medium">Type</th>
-              <th className="py-2 pr-2 font-medium text-right">Requests</th>
-              <th className="py-2 pr-2 font-medium text-right">Success</th>
-              <th className="py-2 pr-2 font-medium text-right">Fallback</th>
-              <th className="py-2 font-medium text-right">Avg time</th>
+              <th className="py-2 pr-2 font-medium">{t("Type")}</th>
+              <th className="py-2 pr-2 font-medium text-right">{t("Requests")}</th>
+              <th className="py-2 pr-2 font-medium text-right">{t("Success")}</th>
+              <th className="py-2 pr-2 font-medium text-right">{t("Fallback")}</th>
+              <th className="py-2 font-medium text-right">{t("Avg time")}</th>
             </tr>
           </thead>
           <tbody className="tabular-nums">
             {p.operations.map(o => (
               <tr key={o.operation} className="border-b border-slate-100 last:border-0 text-slate-700">
-                <td className="py-2 pr-2">{OPERATION_LABELS[o.operation] ?? o.operation}</td>
+                <td className="py-2 pr-2">{OPERATION_LABELS[o.operation] ? t(OPERATION_LABELS[o.operation]) : o.operation}</td>
                 <td className="py-2 pr-2 text-right">{formatNumber(o.requests)}</td>
                 <td className={`py-2 pr-2 text-right ${o.failures > 0 ? 'text-amber-800 font-medium' : ''}`}>{formatPercent(o.successes, o.requests)}</td>
-                <td className="py-2 pr-2 text-right" title="Succeeded only after switching to the backup strategy (Playwright)">{o.fallbackSuccesses > 0 ? formatPercent(o.fallbackSuccesses, o.requests) : '—'}</td>
+                <td className="py-2 pr-2 text-right" title={t("Succeeded only after switching to the backup strategy (Playwright)")}>{o.fallbackSuccesses > 0 ? formatPercent(o.fallbackSuccesses, o.requests) : '—'}</td>
                 <td className="py-2 text-right">{formatDuration(o.averageDurationMs)}</td>
               </tr>
             ))}

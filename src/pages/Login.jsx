@@ -3,6 +3,8 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { login } from "../api/authApi";
 import { saveAuth } from "../api/authStorage";
 import { safeRedirect, withRedirect } from "../utils/redirect";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import {
   Mail,
   Lock,
@@ -22,6 +24,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+  const { t } = useTranslation();
   // Khách bấm "Track Deal" ở trang sự kiện → đăng nhập xong quay lại đúng trang đó
   const [searchParams] = useSearchParams();
   const redirect = safeRedirect(searchParams.get("redirect"));
@@ -47,9 +50,9 @@ export default function Login() {
     } catch (err) {
       console.error("Login error:", err);
       if (err.response && err.response.data) {
-        setError(err.response.data.message || "Incorrect email or password.");
+        setError(err.response.data.message || t("Incorrect email or password."));
       } else {
-        setError("Unable to connect to the server. Please try again later.");
+        setError(t("Unable to connect to the server. Please try again later."));
       }
     } finally {
       setIsLoading(false);
@@ -75,22 +78,23 @@ export default function Login() {
         </div>
 
         <div className="font-syne text-4xl text-center">
-          <p>on working ... </p>
+          <p>{t("Coming soon...")}</p>
         </div>
 
         <div className="relative z-10 text-sm text-slate-500">
-          © {new Date().getFullYear()} ePriTracker. All rights reserved.
+          © {new Date().getFullYear()} ePriTracker. {t("All rights reserved.")}
         </div>
       </div>
 
       {/* 2. Right Section: Login Form */}
-      <div className="flex-1 flex flex-col justify-center items-center p-8 sm:p-12">
+      <div className="relative flex-1 flex flex-col justify-center items-center p-8 sm:p-12">
+        <LanguageSwitcher className="absolute top-6 right-6" />
         <div className="w-full max-w-md">
           {/* Header Form */}
           <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Sign In</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">{t("Sign In")}</h2>
             <p className="text-slate-500">
-              Welcome back! Please enter your details.
+              {t("Welcome back! Please enter your details.")}
             </p>
           </div>
 
@@ -106,7 +110,7 @@ export default function Login() {
             {/* Email Input */}
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-slate-700">
-                Email
+                {t("Email")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -126,7 +130,7 @@ export default function Login() {
             {/* Password Input */}
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-slate-700">
-                Password
+                {t("Password")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -162,14 +166,14 @@ export default function Login() {
                   className="w-4 h-4 text-indigo-600 border-slate-300 rounded cursor-pointer focus:ring-indigo-600 focus:ring-offset-0"
                 />
                 <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
-                  Remember me
+                  {t("Remember me")}
                 </span>
               </label>
               <Link
                 to="/forgot-password"
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
               >
-                Forgot password?
+                {t("Forgot password?")}
               </Link>
             </div>
 
@@ -182,37 +186,37 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Authenticating...</span>
+                  <span>{t("Authenticating...")}</span>
                 </>
               ) : (
-                <span>Sign in</span>
+                <span>{t("Sign in")}</span>
               )}
             </button>
 
             {/* Register Link (Đã thêm mới ở đây) */}
             <div className="text-center pt-3">
               <span className="text-sm text-slate-500">
-                Don't have an account?{" "}
+                {t("Don't have an account?")}{" "}
               </span>
               <Link
                 to={withRedirect("/register", redirect)}
                 className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
               >
-                Sign up
+                {t("Sign up")}
               </Link>
             </div>
 
             {/* Bỏ qua đăng nhập: khách vẫn xem được sự kiện; quay về trang đang xem dở nếu có */}
             <div className="flex items-center gap-3 pt-2">
               <div className="h-px flex-1 bg-slate-200" />
-              <span className="text-xs uppercase tracking-wider text-slate-400">or</span>
+              <span className="text-xs uppercase tracking-wider text-slate-400">{t("or")}</span>
               <div className="h-px flex-1 bg-slate-200" />
             </div>
             <Link
               to={redirect ?? "/events"}
               className="w-full inline-flex justify-center items-center gap-2 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
             >
-              Continue as guest
+              {t("Continue as guest")}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </form>

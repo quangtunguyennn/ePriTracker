@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { register } from "../api/authApi";
 import { withRedirect } from "../utils/redirect";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import {
   Mail,
   Lock,
@@ -25,6 +27,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+  const { t } = useTranslation();
   // Giữ trang đang xem dở (vd khách bấm "Track Deal") qua bước đăng ký → đăng nhập
   const [searchParams] = useSearchParams();
   const loginPath = withRedirect("/login", searchParams.get("redirect"));
@@ -40,7 +43,7 @@ export default function Register() {
       await register({ firstName, lastName, email, password });
 
       // Hiển thị thông báo thành công và chuyển hướng về trang login sau 2 giây
-      setSuccess("Account created successfully! Redirecting to login...");
+      setSuccess(t("Account created successfully! Redirecting to login..."));
       setTimeout(() => {
         navigate(loginPath);
       }, 2000);
@@ -48,9 +51,9 @@ export default function Register() {
     } catch (err) {
       console.error("Register error:", err);
       if (err.response && err.response.data) {
-        setError(err.response.data.message || "Registration failed. Please try again.");
+        setError(err.response.data.message || t("Registration failed. Please try again."));
       } else {
-        setError("Unable to connect to the server. Please try again later.");
+        setError(t("Unable to connect to the server. Please try again later."));
       }
     } finally {
       setIsLoading(false);
@@ -77,25 +80,26 @@ export default function Register() {
         </div>
 
         <div className="font-syne text-4xl text-center relative z-10">
-          <p>Join us today...</p>
+          <p>{t("Join us today...")}</p>
           <p className="text-lg text-slate-400 mt-4 font-urbanist">
-            Start tracking enterprise prices with intelligent automation.
+            {t("Start tracking prices with intelligent automation.")}
           </p>
         </div>
 
         <div className="relative z-10 text-sm text-slate-500">
-          © {new Date().getFullYear()} ePriTracker. All rights reserved.
+          © {new Date().getFullYear()} ePriTracker. {t("All rights reserved.")}
         </div>
       </div>
 
       {/* 2. Right Section: Register Form */}
-      <div className="flex-1 flex flex-col justify-center items-center p-8 sm:p-12">
+      <div className="relative flex-1 flex flex-col justify-center items-center p-8 sm:p-12">
+        <LanguageSwitcher className="absolute top-6 right-6" />
         <div className="w-full max-w-md">
           {/* Header Form */}
           <div className="mb-8 text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Create an Account</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">{t("Create an Account")}</h2>
             <p className="text-slate-500">
-              Enter your details to get started with ePriTracker.
+              {t("Enter your details to get started with ePriTracker.")}
             </p>
           </div>
 
@@ -121,7 +125,7 @@ export default function Register() {
               {/* First Name */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-medium text-slate-700">
-                  First Name
+                  {t("First Name")}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -141,7 +145,7 @@ export default function Register() {
               {/* Last Name */}
               <div className="space-y-1.5">
                 <label className="block text-sm font-medium text-slate-700">
-                  Last Name
+                  {t("Last Name")}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -162,7 +166,7 @@ export default function Register() {
             {/* Email Input */}
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-slate-700">
-                Email
+                {t("Email")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -182,7 +186,7 @@ export default function Register() {
             {/* Password Input */}
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-slate-700">
-                Password
+                {t("Password")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -219,21 +223,21 @@ export default function Register() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Creating Account...</span>
+                  <span>{t("Creating Account...")}</span>
                 </>
               ) : (
-                <span>Sign up</span>
+                <span>{t("Sign up")}</span>
               )}
             </button>
 
             {/* Login Link */}
             <div className="text-center pt-2">
-              <span className="text-sm text-slate-500">Already have an account? </span>
+              <span className="text-sm text-slate-500">{t("Already have an account?")} </span>
               <Link
                 to={loginPath}
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
               >
-                Sign in here
+                {t("Sign in here")}
               </Link>
             </div>
           </form>

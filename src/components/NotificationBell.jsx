@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, PackageX, TrendingDown } from "lucide-react";
 import useNotifications from "../hooks/useNotifications";
+import { useTranslation } from "react-i18next";
 import { formatNotification, formatRelativeTime, notificationUi } from "../i18n/notifications";
 
 // Biểu tượng theo loại thông báo (khoá trùng NotificationTypes ở backend)
@@ -17,6 +18,7 @@ export default function NotificationBell({ enabled = true }) {
   const [untrackedId, setUntrackedId] = useState(null);
   const rootRef = useRef(null);
   const navigate = useNavigate();
+  useTranslation(); // vẽ lại khi đổi ngôn ngữ (chữ và câu thông báo lấy theo ngôn ngữ đang dùng)
   const ui = notificationUi();
   const { unreadCount, items, hasMore, loading, loadedOnce, loadMore, markRead, markAllRead } = useNotifications({ enabled, isOpen: open });
 

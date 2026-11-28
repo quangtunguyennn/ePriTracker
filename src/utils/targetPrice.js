@@ -1,3 +1,5 @@
+import i18n from "../i18n";
+
 /**
  * Giá mục tiêu nhập trong popup "Set Target Price" (trang Products, EventDetail).
  * Không bắt buộc: để trống → theo dõi bình thường, chỉ không có cảnh báo giá (BE nhận targetPrice = null).
@@ -9,7 +11,7 @@ export const validateTargetPrice = (value) => {
   if (text === "") return undefined;
   const price = Number(text);
   if (!Number.isFinite(price) || price <= 0) {
-    return "Please enter a valid price, or leave it blank.";
+    return i18n.t("Please enter a valid price, or leave it blank.");
   }
   return undefined;
 };

@@ -11,6 +11,8 @@ import toast, { Toaster } from "react-hot-toast";
 import PlatformBadge from "../components/PlatformBadge";
 import { EventCardSkeleton, SkeletonGrid } from "../components/CardSkeletons";
 import { getEventEndLabel } from "../utils/eventTime";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
 // Ảnh đại diện sự kiện:
 // - Có ≥ 2 ảnh sản phẩm (sự kiện CellphoneS không có banner riêng) → ghép lưới 2×2
@@ -44,6 +46,7 @@ function EventCover({ event, platform }) {
 }
 
 export default function EventList() {
+    const { t } = useTranslation();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -55,7 +58,7 @@ export default function EventList() {
                 setEvents(await getPublishedEvents());
             } catch (error) {
                 console.error("Error loading events:", error);
-                toast.error("Failed to load events.");
+                toast.error(i18n.t("Failed to load events."));
             } finally {
                 setLoading(false);
             }
@@ -77,10 +80,10 @@ export default function EventList() {
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="max-w-2xl">
                         <h1 className="font-urbanist md:text-3xl font-bold text-gray-900 mb-2">
-                            Events
+                            {t("Events")}
                         </h1>
                         <p className="text-gray-500 font-ggf text-sm md:text-base">
-                            Discover ongoing events across supported platforms and see which products are currently on sale.
+                            {t("Discover ongoing events across supported platforms and see which products are currently on sale.")}
                         </p>
                     </div>
 
@@ -91,7 +94,7 @@ export default function EventList() {
                         <input
                             className="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors sm:text-base"
                             type="text"
-                            placeholder="Search events by name..."
+                            placeholder={t("Search events by name...")}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -101,16 +104,16 @@ export default function EventList() {
                 {/* SECTION 2: EVENT GRID */}
                 <div>
                     {loading ? (
-                        <SkeletonGrid count={6} Card={EventCardSkeleton} label="Loading events…"
+                        <SkeletonGrid count={6} Card={EventCardSkeleton} label={t("Loading events…")}
                             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" />
                     ) : filteredEvents.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl border-dashed">
                             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                                 <FontAwesomeIcon icon={faCalendarAlt} className="text-3xl text-gray-400" />
                             </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-1">No events found</h3>
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">{t("No events found")}</h3>
                             <p className="text-gray-500 max-w-sm text-center mb-6">
-                                There are currently no events matching your search.
+                                {t("There are currently no events matching your search.")}
                             </p>
                         </div>
                     ) : (
@@ -150,7 +153,7 @@ export default function EventList() {
                                                 to={`/events/${evt.eventId}`}
                                                 className="flex-[2] flex justify-center items-center gap-2 px-4 py-2.5 bg-gradient-to-b from-orange-400 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white rounded-xl font-questrial font-semibold transition-all shadow-[inset_0px_1px_0px_rgba(255,255,255,0.3),0px_4px_8px_rgba(249,115,22,0.2)] text-sm"
                                             >
-                                                <FontAwesomeIcon /> View Products
+                                                <FontAwesomeIcon /> {t("View Products")}
                                             </Link>
                                         </div>
                                     </div>

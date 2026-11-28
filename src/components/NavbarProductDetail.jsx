@@ -1,8 +1,11 @@
 // src/components/NavbarProductDetail.jsx
 import { Link } from "react-router-dom";
 import NotificationBell from "./NotificationBell";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import { isLoggedIn } from "../api/authStorage";
 export default function NavbarProductDetail() {
+  const { t } = useTranslation();
   // Hàm xử lý cuộn trang mượt mà
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
@@ -20,8 +23,9 @@ export default function NavbarProductDetail() {
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm px-4 py-4 transition-all">
       {/* Chuông thông báo ở góc phải (màn hình rộng); menu mục lục vẫn căn giữa */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block">
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-3">
         <NotificationBell enabled={isLoggedIn()} />
+        <LanguageSwitcher />
       </div>
       {/* Container giới hạn độ rộng và căn giữa */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-center items-center gap-4 md:gap-12">
@@ -31,7 +35,7 @@ export default function NavbarProductDetail() {
           
           {/* Đã sửa lại cấu trúc nút Products giống các nút khác */}
           <Link to="/products" className={navItemClass}>
-            Products
+            {t("Products")}
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
           </Link>
 
@@ -40,7 +44,7 @@ export default function NavbarProductDetail() {
             onClick={() => scrollToSection("detail")}
             className={navItemClass}
           >
-            Detail
+            {t("Detail")}
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
           </button>
 
@@ -48,7 +52,7 @@ export default function NavbarProductDetail() {
             onClick={() => scrollToSection("pricechart")}
             className={navItemClass}
           >
-            Price Chart
+            {t("Price Chart")}
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
           </button>
 
@@ -56,7 +60,7 @@ export default function NavbarProductDetail() {
             onClick={() => scrollToSection("description")}
             className={navItemClass}
           >
-            Product Description
+            {t("Product Description")}
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
           </button>
 
@@ -65,7 +69,7 @@ export default function NavbarProductDetail() {
             onClick={() => scrollToSection("video-reviews")}
             className={navItemClass}
           >
-            Video Reviews
+            {t("Video Reviews")}
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
           </button>
 
@@ -73,7 +77,7 @@ export default function NavbarProductDetail() {
             onClick={() => scrollToSection("suggestion")}
             className={navItemClass}
           >
-            Suggestion Products
+            {t("Suggested Products")}
             <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-yellow-600 transition-all duration-300 group-hover:w-full"></span>
           </button>
         </div>

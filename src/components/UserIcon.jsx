@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { User, Settings, LogOut, LogIn, UserPlus } from 'lucide-react';
 import { getMe } from '../api/authApi';
 import { clearAuth, getToken } from '../api/authStorage';
+import { useTranslation } from "react-i18next";
 
 export default function UserDropdownMenu() {
+  const { t } = useTranslation();
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -58,7 +60,7 @@ export default function UserDropdownMenu() {
       {/* 1. Loading State */}
       {isLoading ? (
         <div className="px-4 py-3 text-sm text-gray-500 text-center font-medium">
-          Loading...
+          {t("Loading...")}
         </div>
       ) : 
 
@@ -68,7 +70,7 @@ export default function UserDropdownMenu() {
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {userName || 'User'}
+              {userName || t('User')}
             </p>
             <p className="text-xs text-gray-500 truncate">
               {userEmail || ''}
@@ -82,7 +84,7 @@ export default function UserDropdownMenu() {
               className="flex cursor-pointer items-center w-full gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 text-left"
             >
               <User className="w-4 h-4 text-gray-500" />
-              Profile
+              {t("Profile")}
             </button>
 
             <button 
@@ -90,7 +92,7 @@ export default function UserDropdownMenu() {
               className="flex cursor-pointer items-center w-full gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 text-left"
             >
               <Settings className="w-4 h-4 text-gray-500" />
-              Settings
+              {t("Settings")}
             </button>
           </div>
 
@@ -105,7 +107,7 @@ export default function UserDropdownMenu() {
               className="flex cursor-pointer items-center w-full gap-3 px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors duration-200 text-left"
             >
               <LogOut className="w-4 h-4 text-red-500" />
-              Logout
+              {t("Log out")}
             </button>
           </div>
         </>
@@ -119,7 +121,7 @@ export default function UserDropdownMenu() {
             className="flex cursor-pointer items-center w-full gap-3 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 text-left"
           >
             <LogIn className="w-4 h-4 text-gray-500" />
-            Log In
+            {t("Log in")}
           </button>
 
           <button 
@@ -128,7 +130,7 @@ export default function UserDropdownMenu() {
             className="flex cursor-pointer items-center w-full gap-3 px-3 py-2 text-sm font-medium text-indigo-600 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 transition-colors duration-200 text-left"
           >
             <UserPlus className="w-4 h-4 text-indigo-500" />
-            Register
+            {t("Register")}
           </button>
         </div>
       )}

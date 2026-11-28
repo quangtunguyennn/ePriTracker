@@ -7,8 +7,10 @@ import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 
 import { faStrava } from "@fortawesome/free-brands-svg-icons";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { t } = useTranslation();
   return (
     <>
       <div className="bg-black flex gap-20 pl-40 pr-40 pt-20 text-white">
@@ -27,7 +29,7 @@ export default function Footer() {
             </div>
 
             <p className=" -mt-12 pl-14 font-syne text-7xl text-yellow-700 font-semibold italic">
-              Track Smarter
+              {t("Track Smarter")}
             </p>
           </div>
 
@@ -41,18 +43,18 @@ export default function Footer() {
                   ></FontAwesomeIcon>
 
                   <a href="/products" className="no-underline text-white">
-                    Start Tracking Now !
+                    {t("Start Tracking Now!")}
                   </a>
                 </p>
               </div>
 
               <div className="flex gap-12">
                 <a href="/" className="hover:underline">
-                  Home
+                  {t("Home")}
                 </a>
 
                 <a href="/events" className="hover:underline">
-                  Events
+                  {t("Events")}
                 </a>
               </div>
             </div>
@@ -60,31 +62,31 @@ export default function Footer() {
             <div className="flex justify-between cursor-pointer font-questrial text-[14px] p-4 border-b border-gray-600 text-gray-500">
               <div>
                 <p className="hover:underline-offset-4 hover:underline">
-                  Terms of Use
+                  {t("Terms of Use")}
                 </p>
 
                 <p className="hover:underline-offset-4 hover:underline">
-                  Data Protection Policy
+                  {t("Data Protection Policy")}
                 </p>
 
                 <p className="hover:underline-offset-4 hover:underline">
-                  Customize Cookies
-                </p>
-              </div>
-
-              <div>
-                <p className="hover:underline-offset-4 hover:underline">
-                  Cookie Statement
-                </p>
-
-                <p className="hover:underline-offset-4 hover:underline">
-                  Risk Violation Reporting
+                  {t("Customize Cookies")}
                 </p>
               </div>
 
               <div>
                 <p className="hover:underline-offset-4 hover:underline">
-                  Vulnerability Disclosure
+                  {t("Cookie Statement")}
+                </p>
+
+                <p className="hover:underline-offset-4 hover:underline">
+                  {t("Risk Violation Reporting")}
+                </p>
+              </div>
+
+              <div>
+                <p className="hover:underline-offset-4 hover:underline">
+                  {t("Vulnerability Disclosure")}
                 </p>
 
                 <p className="hover:underline-offset-4 hover:underline">
@@ -96,7 +98,7 @@ export default function Footer() {
             <div className="flex justify-between text-white font-syne p-4">
               <div>
                 <p className="text-gray-400 font-medium font-lexend">
-                  Copyright @ 2026 TK team.
+                  {t("Copyright © 2026 TK team.")}
                 </p>
               </div>
 

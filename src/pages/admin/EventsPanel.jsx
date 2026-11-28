@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AutoEventsPanel from './AutoEventsPanel';
 import TikiEventsPanel from './TikiEventsPanel';
+import { useTranslation } from 'react-i18next';
 
 const TABS = [
   { id: 'tiki', label: 'Tiki (manual review)' },
@@ -9,6 +10,7 @@ const TABS = [
 
 // Tab "Event Management": Tiki do Admin duyệt (như cũ) + sàn tự đăng sự kiện
 export default function EventsPanel() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState('tiki');
   const [autoOpened, setAutoOpened] = useState(false); // chỉ tải sự kiện tự đăng khi mở tab lần đầu
 
@@ -20,14 +22,14 @@ export default function EventsPanel() {
   return (
     <div className="space-y-6">
       <div className="inline-flex rounded-lg border border-slate-300 bg-white p-1">
-        {TABS.map(t => (
+        {TABS.map(item => (
           <button
-            key={t.id}
-            aria-pressed={tab === t.id}
-            onClick={() => select(t.id)}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === t.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+            key={item.id}
+            aria-pressed={tab === item.id}
+            onClick={() => select(item.id)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === item.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
           >
-            {t.label}
+            {t(item.label)}
           </button>
         ))}
       </div>

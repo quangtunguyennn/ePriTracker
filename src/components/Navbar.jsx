@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import UserIcon from "./UserIcon"; // Component UserDropdownMenu của bạn
 import NotificationBell from "./NotificationBell";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import { isLoggedIn as hasToken } from "../api/authStorage";
 
 export default function Navbar() {
+  const { t } = useTranslation();
   const [isUserIconClicked, setIsUserIconClicked] = useState(false);
 
   // 1. Thêm state quản lý trạng thái đăng nhập
@@ -48,7 +51,7 @@ export default function Navbar() {
             to="/"
             className="hover:text-yellow-600 transition-colors text-xl font-semibold no-underline font-urbanist"
           >
-            Home
+            {t("Home")}
           </Link>
           {/* 3. Render có điều kiện: Chỉ hiện khi isLoggedIn = true */}
           {isLoggedIn && (
@@ -56,14 +59,14 @@ export default function Navbar() {
               to="/products"
               className="hover:text-yellow-600 transition-colors text-xl font-semibold no-underline font-urbanist"
             >
-              Products
+              {t("Products")}
             </Link>
           )}
           <Link
             to="/events" // Thêm đường dẫn tạm
             className="hover:text-yellow-600 transition-colors text-xl font-semibold no-underline font-urbanist"
           >
-            Events
+            {t("Events")}
           </Link>
         </div>
 
@@ -74,13 +77,16 @@ export default function Navbar() {
               onClick={toggleUserMenu}
               className="w-8 h-8 object-contain cursor-pointer"
               src="/user.svg"
-              alt="User Menu"
+              alt={t("User menu")}
             />
             {isUserIconClicked && <UserIcon />}
           </div>
 
           {/* 4. Chuông thông báo (chỉ khi đã đăng nhập) – số chưa đọc cập nhật realtime qua SignalR */}
           <NotificationBell enabled={isLoggedIn} />
+
+          {/* 5. Đổi ngôn ngữ EN | VI */}
+          <LanguageSwitcher />
         </div>
       </div>
     </nav>
