@@ -181,7 +181,10 @@ function PlatformCard({ platform: p }) {
   const requests = p.operations.reduce((sum, o) => sum + o.requests, 0);
   const failures = p.operations.reduce((sum, o) => sum + o.failures, 0);
   const lastSuccess = p.operations.map(o => o.lastSuccessAt).filter(Boolean).sort().at(-1);
-  const status = requests === 0 ? { tone: 'default', text: 'No data yet' }
+  // Sàn chặn request (403/429 liên tục) → job giá đang tạm dừng cào sàn này: ưu tiên hiện trạng thái đó
+  const paused = !!p.pausedUntil;
+  const status = paused ? { tone: 'bad', text: 'Paused – blocked' }
+    : requests === 0 ? { tone: 'default', text: 'No data yet' }
     : failures === 0 ? { tone: 'good', text: 'Healthy' }
     : failures / requests > 0.2 ? { tone: 'bad', text: 'Failing' }
     : { tone: 'warn', text: 'Some errors' };
@@ -195,6 +198,16 @@ function PlatformCard({ platform: p }) {
         </div>
         <p className="text-sm text-slate-500">{t("Last success {{when}}", { when: formatAgo(lastSuccess) })}</p>
       </div>
+
+      {paused ? (
+        <p className="mb-5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          {t("The platform is blocking requests (403/429). Price crawling for this platform is paused until {{time}} ({{when}}); prices are kept and nothing is marked as delisted.", { time: formatDateTime(p.pausedUntil), when: formatAgo(p.pausedUntil) })}
+        </p>
+      ) : p.consecutiveBlocks > 0 && (
+        <p className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {t("Blocked {{count}} time(s) in a row (403/429) – crawling pauses after 3.", { count: p.consecutiveBlocks })}
+        </p>
+      )}
 
       <div className="grid grid-cols-5 gap-2 mb-5">
         <MiniStat label={t("Tracked")} value={p.trackedProducts} />
