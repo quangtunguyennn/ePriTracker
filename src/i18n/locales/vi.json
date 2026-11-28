@@ -360,5 +360,8 @@
   "{{platform}}: {{count}} products ({{share}}%)": "{{platform}}: {{count}} sản phẩm ({{share}}%)",
   "{{platform}} {{count}} products, {{share}} percent": "{{platform}} {{count}} sản phẩm, {{share}} phần trăm",
   "Show less": "Thu gọn",
-  "Show all {{count}}": "Xem tất cả {{count}}"
+  "Show all {{count}}": "Xem tất cả {{count}}",
+  "Paused – blocked": "Tạm dừng – bị chặn",
+  "The platform is blocking requests (403/429). Price crawling for this platform is paused until {{time}} ({{when}}); prices are kept and nothing is marked as delisted.": "Sàn đang chặn request (403/429). Đã tạm dừng cào giá sàn này tới {{time}} ({{when}}); giá được giữ nguyên và không sản phẩm nào bị đánh dấu là đã gỡ.",
+  "Blocked {{count}} time(s) in a row (403/429) – crawling pauses after 3.": "Bị chặn {{count}} lần liên tiếp (403/429) – tạm dừng cào khi tới 3 lần."
 }
