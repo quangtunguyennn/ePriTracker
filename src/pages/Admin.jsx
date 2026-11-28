@@ -3,9 +3,12 @@ import { clearAuth } from '../api/authStorage';
 import MonitoringPanel from './admin/MonitoringPanel';
 import StatsPanel from './admin/StatsPanel';
 import EventsPanel from './admin/EventsPanel';
+import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 // Giao diện SaaS sáng cho toàn bộ trang Admin (nền phẳng, thẻ trắng viền mảnh, màu nhấn cam như trang người dùng)
 export default function Admin() {
+  const { t } = useTranslation();
   const [activeMenu, setActiveMenu] = useState('events');
 
   const menuItems = [
@@ -18,9 +21,10 @@ export default function Admin() {
   ];
   const current = menuItems.find(m => m.id === activeMenu);
 
+  // label / subtitle là câu tiếng Anh (khoá dịch) – dịch lúc hiển thị bằng t(...)
   // Đăng xuất: xoá phiên trong localStorage (giống nút Logout ở trang người dùng) rồi về trang đăng nhập
   const handleLogout = () => {
-    if (!window.confirm('Log out of the admin panel?')) return;
+    if (!window.confirm(t('Log out of the admin panel?'))) return;
     clearAuth();
     window.location.href = '/login';
   };
@@ -38,7 +42,8 @@ export default function Admin() {
         <aside className="w-72 flex flex-col bg-white border-r border-slate-200">
           <div className="p-6 border-b border-slate-200">
             <h1 className="text-3xl font-urbanist font-bold text-orange-500">ePriTracker</h1>
-            <p className="text-xs font-syne mt-2 uppercase tracking-widest text-slate-500">Admin Panel</p>
+            <p className="text-xs font-syne mt-2 uppercase tracking-widest text-slate-500">{t("Admin Panel")}</p>
+            <LanguageSwitcher className="mt-4" />
           </div>
           <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
             {menuItems.map((item) => {
@@ -52,10 +57,10 @@ export default function Admin() {
                     ? 'bg-orange-50 text-orange-700 border-orange-200'
                     : 'text-slate-600 border-transparent hover:bg-slate-100 hover:text-slate-900'}`}
                 >
-                  {item.label}
+                  {t(item.label)}
                   {/* Mục chưa làm: ghi rõ để không bị tưởng là lỗi khi bấm vào thấy trống */}
                   {item.soon && (
-                    <span className="ml-auto rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Soon</span>
+                    <span className="ml-auto rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{t("Soon")}</span>
                   )}
                 </button>
               );
@@ -66,15 +71,15 @@ export default function Admin() {
               onClick={handleLogout}
               className="w-full px-4 py-3 rounded-xl text-left font-syne font-medium text-rose-600 border border-transparent transition-colors duration-200 hover:bg-rose-50 hover:border-rose-200"
             >
-              Log out
+              {t("Log out")}
             </button>
           </div>
         </aside>
 
         <main className="flex-1 p-8 overflow-y-auto">
           <header className="mb-8">
-            <h2 className="text-3xl font-urbanist font-bold text-slate-900">{current?.label}</h2>
-            {current?.subtitle && <p className="mt-1 text-sm text-slate-500">{current.subtitle}</p>}
+            <h2 className="text-3xl font-urbanist font-bold text-slate-900">{current && t(current.label)}</h2>
+            {current?.subtitle && <p className="mt-1 text-sm text-slate-500">{t(current.subtitle)}</p>}
           </header>
 
           {activeMenu === 'dashboard' && <StatsPanel />}
@@ -87,8 +92,8 @@ export default function Admin() {
 
           {current?.soon && (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
-              <p className="text-base font-semibold text-slate-900">{current.label} is coming soon</p>
-              <p className="mt-1 text-sm text-slate-500">This section is planned but not built yet.</p>
+              <p className="text-base font-semibold text-slate-900">{t("{{section}} is coming soon", { section: t(current.label) })}</p>
+              <p className="mt-1 text-sm text-slate-500">{t("This section is planned but not built yet.")}</p>
             </div>
           )}
         </main>

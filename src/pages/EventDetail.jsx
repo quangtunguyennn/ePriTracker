@@ -4,6 +4,8 @@ import { getLiveEventProducts, getPublishedEvents } from "../api/eventApi";
 import { getErrorMessage } from "../api/client";
 import { isLoggedIn } from "../api/authStorage";
 import { withRedirect } from "../utils/redirect";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 import PlatformBadge from "../components/PlatformBadge";
 import { getEventEndLabel } from "../utils/eventTime";
 import { parseTargetPrice, validateTargetPrice } from "../utils/targetPrice";
@@ -37,6 +39,7 @@ const POPUP_CLASSES = {
 
 export default function EventDetail() {
   const { eventId } = useParams();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [retryCount, setRetryCount] = useState(0);
@@ -64,7 +67,7 @@ export default function EventDetail() {
       } catch (error) {
         console.error("Error loading event products:", error);
         // BE báo lý do cụ thể: sự kiện chưa có sản phẩm, hoặc đang tải từ sàn (thử lại sau ít phút)
-        setLoadError(getErrorMessage(error, "Failed to load products for this event."));
+        setLoadError(getErrorMessage(error, i18n.t("Failed to load products for this event.")));
         if (error.response?.status === 503 && retryCount < LOADING_MAX_RETRIES) {
           retryTimer = setTimeout(() => setRetryCount((n) => n + 1), LOADING_RETRY_MS);
         }
@@ -93,22 +96,22 @@ export default function EventDetail() {
   // Xử lý khi bấm nút Track Deal với Popup nhập Target Price
   const handleTrackProduct = async (productLink, productId) => {
     if (!productLink) {
-      toast.error("Cannot track this product: Missing product link.");
+      toast.error(t("Cannot track this product: Missing product link."));
       return;
     }
 
     // Khách chưa đăng nhập: hỏi trước, không đẩy thẳng sang trang đăng nhập; đăng nhập xong quay lại sự kiện này
     if (!isLoggedIn()) {
       const choice = await Swal.fire({
-        title: "Sign in to track this deal",
-        text: "Track prices and get alerted when this deal drops further. It only takes a moment.",
+        title: t("Sign in to track this deal"),
+        text: t("Track prices and get alerted when this deal drops further. It only takes a moment."),
         icon: "info",
         iconColor: "#ea580c",
         showCancelButton: true,
         showDenyButton: true,
-        confirmButtonText: "Sign in",
-        denyButtonText: "Create account",
-        cancelButtonText: "Not now",
+        confirmButtonText: t("Sign in"),
+        denyButtonText: t("Create account"),
+        cancelButtonText: t("Not now"),
         buttonsStyling: false,
         reverseButtons: true,
         focusConfirm: true,
@@ -127,19 +130,19 @@ export default function EventDetail() {
 
     // Popup nhập Target Price chuẩn UI/UX (Đã căn giữa ô input và bỏ nút tăng giảm)
     const { value: targetPriceInput, isConfirmed } = await Swal.fire({
-      title: "Set Target Price",
-      text: "Get alerted when the price drops to this level. Optional – leave blank to just track.",
+      title: t("Set Target Price"),
+      text: t("Get alerted when the price drops to this level. Optional – leave blank to just track."),
       input: "text",
       inputAttributes: {
         inputmode: "numeric",
         pattern: "[0-9]*"
       },
-      inputPlaceholder: "e.g. 22000000",
+      inputPlaceholder: t("e.g. 22000000"),
       icon: "question",
       iconColor: "#ea580c",
       showCancelButton: true,
-      confirmButtonText: "Confirm",
-      cancelButtonText: "Cancel",
+      confirmButtonText: t("Confirm"),
+      cancelButtonText: t("Cancel"),
       buttonsStyling: false,
       reverseButtons: true,
       focusCancel: true,
@@ -159,16 +162,16 @@ export default function EventDetail() {
     if (!isConfirmed) return;
 
     setTrackingId(productId);
-    const toastId = toast.loading("Adding Product to tracking list...");
+    const toastId = toast.loading(t("Adding product to your tracking list..."));
 
     try {
       await addProduct(productLink.trim(), parseTargetPrice(targetPriceInput));
 
-      toast.success("Product tracked successfully!", { id: toastId });
+      toast.success(t("Product tracked successfully!"), { id: toastId });
     } catch (error) {
       console.error("Error tracking product:", error);
       const errorMsg =
-        error.response?.data?.message || "Failed to track this product.";
+        error.response?.data?.message || t("Failed to track this product.");
       toast.error(errorMsg, { id: toastId });
     } finally {
       setTrackingId(null);
@@ -204,7 +207,7 @@ export default function EventDetail() {
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest rounded-full border border-emerald-200/60">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Live Event
+                  {t("Live Event")}
                 </div>
                 <PlatformBadge platform={event?.platform} />
                 {endLabel && (
@@ -214,11 +217,10 @@ export default function EventDetail() {
                 )}
               </div>
               <h1 className="font-urbanist md:text-4xl text-3xl font-black text-slate-900 mb-2 tracking-tight">
-                {event?.title || "Event Products"}
+                {event?.title || t("Event Products")}
               </h1>
               <p className="text-slate-500 font-ggf text-sm md:text-base">
-                Explore and track products participating in this specific event.
-                Get notified when prices drop.
+                {t("Explore and track products participating in this specific event. Get notified when prices drop.")}
               </p>
             </div>
 
@@ -233,7 +235,7 @@ export default function EventDetail() {
               <input
                 className="block w-full pl-11 pr-4 py-3 border border-slate-200 rounded-2xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all sm:text-sm font-medium shadow-sm"
                 type="text"
-                placeholder="Search products in this event..."
+                placeholder={t("Search products in this event...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -273,17 +275,13 @@ export default function EventDetail() {
                 />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2 font-urbanist">
-                No products found
+                {t("No products found")}
               </h3>
               {loadError ? (
                 <p className="text-slate-500 max-w-md text-center mb-6 font-medium">{loadError}</p>
               ) : (
                 <p className="text-slate-500 max-w-md text-center mb-6 font-medium">
-                  We couldn't find any products matching{" "}
-                  <span className="font-bold text-slate-700">
-                    "{searchQuery}"
-                  </span>{" "}
-                  in this event.
+                  {t("We couldn't find any products matching \"{{query}}\" in this event.", { query: searchQuery })}
                 </p>
               )}
             </div>
@@ -316,7 +314,7 @@ export default function EventDetail() {
                     <div className="relative aspect-[4/3] w-full bg-slate-50 rounded-2xl mb-4 p-4 overflow-hidden flex items-center justify-center">
                       <img
                         src={item.imageURL || "https://via.placeholder.com/200"}
-                        alt={item.productName || "Product"}
+                        alt={item.productName || t("Product")}
                         className="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-out"
                       />
                     </div>
@@ -342,7 +340,7 @@ export default function EventDetail() {
                             <>
                               <div className="flex items-center gap-1.5 font-questrial mb-1.5">
                                 <span className="font-semibold text-[12px] text-slate-400">
-                                  Original:
+                                  {t("Original:")}
                                 </span>
                                 <span className="font-medium text-[14px] text-slate-400 line-through decoration-1 decoration-slate-400/60">
                                   {oldPrice.toLocaleString("vi-VN")} ₫
@@ -351,7 +349,7 @@ export default function EventDetail() {
 
                               <div>
                                 <span className="text-[11px] text-red-600 font-bold font-questrial uppercase tracking-wider block leading-none mb-1">
-                                  DISCOUNTED PRICE
+                                  {t("DISCOUNTED PRICE")}
                                 </span>
                                 <div
                                   title={
@@ -370,7 +368,7 @@ export default function EventDetail() {
                               <div className="h-[22px]"></div>
                               <div>
                                 <span className="text-[11px] font-bold font-questrial uppercase tracking-wider text-slate-400 block leading-none mb-1">
-                                  REGULAR PRICE
+                                  {t("REGULAR PRICE")}
                                 </span>
                                 <div
                                   title={
@@ -402,11 +400,11 @@ export default function EventDetail() {
                                 icon={faSpinner}
                                 className="animate-spin text-orange-400"
                               />
-                              <span>Tracking...</span>
+                              <span>{t("Tracking...")}</span>
                             </>
                           ) : (
                             <>
-                              <span>Track Deal</span>
+                              <span>{t("Track Deal")}</span>
                             </>
                           )}
                         </button>
@@ -418,7 +416,7 @@ export default function EventDetail() {
                             rel="noopener noreferrer"
                             className="flex-1 flex items-center justify-center gap-2 bg-blue-50/50 text-blue-700 border border-blue-100 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wide hover:bg-blue-600 hover:text-white hover:border-blue-600 active:scale-[0.97] transition-all duration-200"
                           >
-                            View
+                            {t("View")}
                             <FontAwesomeIcon
                               icon={faExternalLinkAlt}
                               className="text-[10px]"

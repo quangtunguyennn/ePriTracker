@@ -1,10 +1,7 @@
 // Dựng câu thông báo theo ngôn ngữ từ dữ liệu (type + data) do backend lưu – thông báo cũ cũng tự đổi ngôn ngữ.
 // Thêm ngôn ngữ: thêm một khối vào MESSAGES. Thêm loại thông báo: thêm khoá trùng với NotificationTypes ở backend.
 
-export const DEFAULT_LANGUAGE = "en";
-
-// Ngôn ngữ đang dùng – hiện cố định tiếng Anh; khi có phần chọn ngôn ngữ, chỉ cần đổi hàm này
-export const getLanguage = () => DEFAULT_LANGUAGE;
+import { DEFAULT_LANGUAGE, getLanguage } from "./index";
 
 const LOCALES = { en: "en-US", vi: "vi-VN" };
 

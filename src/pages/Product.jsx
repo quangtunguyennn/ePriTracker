@@ -18,8 +18,11 @@ import { ProductCardSkeleton, SkeletonGrid } from "../components/CardSkeletons";
 // Import thư viện thông báo góc phải và modal xác nhận
 import toast, { Toaster } from "react-hot-toast";
 import Swal from "sweetalert2";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
 export default function Product() {
+  const { t } = useTranslation();
   // 1. State Management
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +43,7 @@ export default function Product() {
       return list;
     } catch (error) {
       console.error("Error loading product list:", error);
-      toast.error("Failed to load products.");
+      toast.error(i18n.t("Failed to load products."));
       return null;
     } finally {
       if (!silent) setLoading(false);
@@ -55,14 +58,14 @@ export default function Product() {
   const handleAddProduct = async (e) => {
     e?.preventDefault();
     if (!linkProduct.trim()) {
-      toast.error("Please enter a product link!");
+      toast.error(t("Please enter a product link!"));
       return;
     }
 
     // Popup nhập Target Price chuẩn UI/UX (Đã căn giữa hoàn toàn ô input)
     const { value: targetPriceInput, isConfirmed } = await Swal.fire({
-      title: "Set Target Price",
-      text: "Get alerted when the price drops to this level. Optional – leave blank to just track.",
+      title: t("Set Target Price"),
+      text: t("Get alerted when the price drops to this level. Optional – leave blank to just track."),
       input: "text",
       inputAttributes: {
         inputmode: "numeric",
@@ -72,8 +75,8 @@ export default function Product() {
       icon: "question",
       iconColor: "#ea580c",
       showCancelButton: true,
-      confirmButtonText: "Confirm",
-      cancelButtonText: "Cancel",
+      confirmButtonText: t("Confirm"),
+      cancelButtonText: t("Cancel"),
       buttonsStyling: false,
       reverseButtons: true,
       focusCancel: true,
@@ -100,13 +103,13 @@ export default function Product() {
 
     if (!isConfirmed) return;
 
-    const loadingToast = toast.loading("Adding product...");
+    const loadingToast = toast.loading(t("Adding product..."));
 
     try {
       setIsSubmitting(true);
       await addProduct(linkProduct.trim(), parseTargetPrice(targetPriceInput));
 
-      toast.success("Product added successfully!", {
+      toast.success(t("Product added successfully!"), {
         id: loadingToast,
         duration: 3000,
       });
@@ -123,9 +126,9 @@ export default function Product() {
       // BE trả { message } cho lỗi nghiệp vụ; lỗi khác (vd 400 validation) là object → không ghép thẳng vào chuỗi
       const data = error.response?.data;
       const errorMsg =
-        data?.message || (typeof data === "string" && data) || "Error adding product!";
+        data?.message || (typeof data === "string" && data) || t("Error adding product!");
 
-      toast.error(`Failed: ${errorMsg}`, {
+      toast.error(t("Failed: {{error}}", { error: errorMsg }), {
         id: loadingToast,
         duration: 4000,
       });
@@ -137,13 +140,13 @@ export default function Product() {
   // Delete product
   const handleDeleteProduct = async (id) => {
     const result = await Swal.fire({
-      title: "Delete product?",
-      text: "This action cannot be undone.",
+      title: t("Delete product?"),
+      text: t("This action cannot be undone."),
       icon: "warning",
       iconColor: "#ea580c",
       showCancelButton: true,
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
+      confirmButtonText: t("Delete"),
+      cancelButtonText: t("Cancel"),
       buttonsStyling: false,
       reverseButtons: true,
       focusCancel: true,
@@ -177,9 +180,9 @@ export default function Product() {
           return next;
         });
       }, 150);
-      toast.success("Product deleted successfully!");
+      toast.success(t("Product deleted successfully!"));
     } catch (error) {
-      toast.error(error.response?.data?.message || "Delete failed!");
+      toast.error(error.response?.data?.message || t("Delete failed!"));
     }
   };
 
@@ -188,13 +191,13 @@ export default function Product() {
     try {
       const text = await navigator.clipboard.readText();
       setLinkProduct(text);
-      toast.success("Pasted from clipboard", {
+      toast.success(t("Pasted from clipboard"), {
         icon: "📋",
         duration: 2000,
       });
     } catch (err) {
       console.error("Failed to paste from clipboard", err);
-      toast.error("Failed to paste from clipboard");
+      toast.error(t("Failed to paste from clipboard"));
     }
   };
 
@@ -240,11 +243,10 @@ export default function Product() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
           <div className="mb-6 max-w-2xl">
             <h1 className="font-urbanist md:text-3xl font-bold text-gray-900 mb-2">
-              Product Tracker
+              {t("Product Tracker")}
             </h1>
             <p className="text-gray-500 font-ggf text-sm md:text-base">
-              Paste product links from e-commerce platforms to start tracking
-              price changes.
+              {t("Paste product links from e-commerce platforms to start tracking price changes.")}
             </p>
           </div>
 
@@ -271,7 +273,7 @@ export default function Product() {
                 type="button"
                 onClick={handlePaste}
                 className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-400 hover:text-gray-700 transition-colors"
-                title="Paste from Clipboard"
+                title={t("Paste from clipboard")}
               >
                 <FontAwesomeIcon icon={faPaste} className="text-lg" />
               </button>
@@ -303,11 +305,11 @@ export default function Product() {
                       icon={faSpinner}
                       className="animate-spin text-lg text-white/90"
                     />
-                    <span className="animate-pulse">Processing...</span>
+                    <span className="animate-pulse">{t("Processing...")}</span>
                   </>
                 ) : (
                   <>
-                    <span>TRACK</span>
+                    <span>{t("TRACK")}</span>
                   </>
                 )}
               </span>
@@ -327,7 +329,7 @@ export default function Product() {
             <input
               className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors sm:text-sm"
               type="text"
-              placeholder="Search your list..."
+              placeholder={t("Search your list...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -345,22 +347,22 @@ export default function Product() {
 
             <select className="flex-1 lg:flex-none block pl-3 pr-8 py-2 text-sm border-gray-200 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer text-gray-700 font-questrial font-semibold">
               <option value="" disabled hidden>
-                Price Status
+                {t("Price Status")}
               </option>
               <option className="font-questrial font-semibold" value="1">
-                All Products
+                {t("All Products")}
               </option>
               <option className="font-questrial font-semibold" value="2">
-                On Sale
+                {t("On Sale")}
               </option>
               <option className="font-questrial font-semibold" value="3">
-                Target Reached
+                {t("Target Reached")}
               </option>
             </select>
 
             <button className="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 font-questrial font-semibold hover:bg-gray-50 hover:text-orange-600 transition-colors">
               <FontAwesomeIcon icon={faFilter} className="text-gray-400" />{" "}
-              Advanced Filters
+              {t("Advanced Filters")}
             </button>
           </div>
         </div>
@@ -371,7 +373,7 @@ export default function Product() {
             <SkeletonGrid
               count={8}
               Card={ProductCardSkeleton}
-              label="Loading products…"
+              label={t("Loading products…")}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             />
           ) : filteredProducts.length === 0 ? (
@@ -383,11 +385,10 @@ export default function Product() {
                 />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-1">
-                No products found
+                {t("No products found")}
               </h3>
               <p className="text-gray-500 max-w-sm text-center mb-6">
-                You haven't tracked any products yet, or no products match your
-                search query.
+                {t("You haven't tracked any products yet, or no products match your search query.")}
               </p>
             </div>
           ) : (
@@ -406,12 +407,12 @@ export default function Product() {
                     initialPrice={
                       item.initialPrice
                         ? `${item.initialPrice.toLocaleString("vi-VN")} ₫`
-                        : "No price yet"
+                        : t("No price yet")
                     }
                     latestPrice={
                       item.latestPrice
                         ? `${item.latestPrice.toLocaleString("vi-VN")} ₫`
-                        : "No price yet"
+                        : t("No price yet")
                     }
                     productLink={item.productLink}
                     lastUpdatedAt={item.lastUpdatedAt}

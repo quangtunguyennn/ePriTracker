@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 // Thành phần giao diện dùng chung cho các tab trang Admin – kiểu SaaS sáng: thẻ trắng, viền mảnh, chữ xám đậm/nhạt
 
 export const PANEL = "bg-white rounded-xl border border-slate-200";
@@ -54,17 +56,19 @@ export function Pill({ children, tone = "default", title }) {
   );
 }
 
-export function LoadingRow({ text = "Loading…" }) {
-  return <p className="text-sm text-slate-500 py-6 text-center">{text}</p>;
+export function LoadingRow({ text }) {
+  const { t } = useTranslation();
+  return <p className="text-sm text-slate-500 py-6 text-center">{text ?? t("Loading…")}</p>;
 }
 
 export function ErrorBox({ message, onRetry }) {
+  const { t } = useTranslation();
   return (
     <div className={`${PANEL} p-8 text-center`}>
       <p className="text-sm text-rose-700">{message}</p>
       {onRetry && (
         <button onClick={onRetry} className="mt-4 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50">
-          Try again
+          {t("Try again")}
         </button>
       )}
     </div>

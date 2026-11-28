@@ -1,5 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect, useId, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import i18n, { getLocale } from "../i18n";
 import {
   addProduct,
   getPriceHistory,
@@ -55,10 +57,10 @@ const compactVnd = (n) => {
 };
 
 const shortDate = (t) =>
-  new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  new Date(t).toLocaleDateString(getLocale(), { month: "short", day: "numeric" });
 
 const longDate = (t) =>
-  new Date(t).toLocaleString("en-US", {
+  new Date(t).toLocaleString(getLocale(), {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -169,15 +171,16 @@ function StatCard({ label, value, hint, tone = "neutral", icon }) {
 }
 
 function ChartTooltip({ active, payload, lowest, showLowest }) {
+  const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
   return (
     <div className="bg-white/95 backdrop-blur p-3.5 border border-slate-200 shadow-xl rounded-xl min-w-[170px]">
-      <p className="text-slate-500 text-xs mb-1">{point.isNow ? "Now" : longDate(point.t)}</p>
+      <p className="text-slate-500 text-xs mb-1">{point.isNow ? t("Now") : longDate(point.t)}</p>
       <p className="text-orange-600 font-black text-lg font-questrial">{vnd(point.price)}</p>
       {showLowest && point.price === lowest && (
         <span className="mt-1.5 inline-block text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">
-          Lowest in period
+          {t("Lowest in period")}
         </span>
       )}
     </div>
@@ -185,6 +188,7 @@ function ChartTooltip({ active, payload, lowest, showLowest }) {
 }
 
 function PriceHistorySection({ data, loading, error, days, loadedDays, onChangeDays, onRetry }) {
+  const { t } = useTranslation();
   const gradientId = useId().replace(/:/g, "");
   const reducedMotion =
     typeof window !== "undefined" &&
@@ -202,15 +206,15 @@ function PriceHistorySection({ data, loading, error, days, loadedDays, onChangeD
         </div>
         <div>
           <h2 className="text-2xl font-bold text-slate-900 font-questrial leading-tight">
-            Price History
+            {t("Price History")}
           </h2>
-          <p className="text-sm text-slate-500">Last {days} days</p>
+          <p className="text-sm text-slate-500">{t("Last {{count}} days", { count: days })}</p>
         </div>
       </div>
 
       <div
         role="group"
-        aria-label="Time range"
+        aria-label={t("Time range")}
         className="inline-flex items-center bg-slate-50 p-1 rounded-xl border border-slate-100 self-start sm:self-auto"
       >
         {RANGES.map((d) => (
@@ -219,12 +223,12 @@ function PriceHistorySection({ data, loading, error, days, loadedDays, onChangeD
             type="button"
             onClick={() => onChangeDays(d)}
             aria-pressed={days === d}
-            aria-label={`${d} days`}
+            aria-label={t("{{count}} days", { count: d })}
             className={`px-3.5 sm:px-4 py-1.5 rounded-lg text-sm font-questrial font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${
               days === d ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            {d} Days
+            {t("{{count}} Days", { count: d })}
           </button>
         ))}
       </div>
@@ -248,7 +252,7 @@ function PriceHistorySection({ data, loading, error, days, loadedDays, onChangeD
       <div
         className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-10 animate-pulse"
         aria-busy="true"
-        aria-label="Loading price history"
+        aria-label={t("Loading price history")}
       >
         <div className="flex justify-between mb-8">
           <div className="h-10 w-48 bg-slate-100 rounded-xl" />
@@ -274,7 +278,7 @@ function PriceHistorySection({ data, loading, error, days, loadedDays, onChangeD
           onClick={onRetry}
           className="inline-flex items-center gap-2 px-5 py-2 bg-white text-red-600 border border-red-200 rounded-xl font-semibold hover:bg-red-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
         >
-          <RefreshCw className="w-4 h-4" aria-hidden="true" /> Try again
+          <RefreshCw className="w-4 h-4" aria-hidden="true" /> {t("Try again")}
         </button>
       </div>,
     );
@@ -285,9 +289,9 @@ function PriceHistorySection({ data, loading, error, days, loadedDays, onChangeD
     return shell(
       <div className="bg-slate-50 rounded-2xl text-center py-14 px-4 border border-slate-100 border-dashed">
         <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" aria-hidden="true" />
-        <p className="text-slate-700 font-semibold mb-1">No price data in the last {days} days</p>
+        <p className="text-slate-700 font-semibold mb-1">{t("No price data in the last {{count}} days", { count: days })}</p>
         <p className="text-slate-500 text-sm max-w-md mx-auto">
-          We check prices regularly. Try a longer range, or come back later.
+          {t("We check prices regularly. Try a longer range, or come back later.")}
         </p>
       </div>,
     );
@@ -304,11 +308,11 @@ function PriceHistorySection({ data, loading, error, days, loadedDays, onChangeD
   const ChangeIcon = delta < 0 ? TrendingDown : delta > 0 ? TrendingUp : Minus;
 
   const insight = flat
-    ? { text: "Price has been stable", cls: "bg-slate-50 text-slate-600 border-slate-200" }
+    ? { text: t("Price has been stable"), cls: "bg-slate-50 text-slate-600 border-slate-200" }
     : atLow
-      ? { text: "Lowest price in this period", cls: "bg-emerald-50 text-emerald-700 border-emerald-100" }
+      ? { text: t("Lowest price in this period"), cls: "bg-emerald-50 text-emerald-700 border-emerald-100" }
       : {
-          text: `${aboveLow.toFixed(1)}% above the period low`,
+          text: t("{{pct}}% above the period low", { pct: aboveLow.toFixed(1) }),
           cls:
             aboveLow <= 5
               ? "bg-amber-50 text-amber-700 border-amber-100"
@@ -323,41 +327,41 @@ function PriceHistorySection({ data, loading, error, days, loadedDays, onChangeD
         </span>
         {model.startedLate && (
           <span className="text-xs text-slate-500">
-            Tracking since {shortDate(first.t)} — earlier prices aren’t available.
+            {t("Tracking since {{date}} — earlier prices aren’t available.", { date: shortDate(first.t) })}
           </span>
         )}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        <StatCard label="Current price" value={vnd(current)} hint={`Updated ${shortDate(last.t)}`} />
+        <StatCard label={t("Current price")} value={vnd(current)} hint={t("Updated {{date}}", { date: shortDate(last.t) })} />
         <StatCard
-          label="Lowest"
+          label={t("Lowest")}
           tone="good"
           value={vnd(low)}
           hint={model.lowAt ? shortDate(model.lowAt) : undefined}
         />
         <StatCard
-          label="Highest"
+          label={t("Highest")}
           tone="bad"
           value={vnd(high)}
           hint={model.highAt ? shortDate(model.highAt) : undefined}
         />
         <StatCard
-          label={`Change · ${loadedDays}D`}
+          label={t("Change · {{count}}D", { count: loadedDays })}
           tone={changeTone}
           icon={<ChangeIcon className="w-3.5 h-3.5" aria-hidden="true" />}
-          value={delta === 0 ? "No change" : `${delta < 0 ? "−" : "+"}${vnd(Math.abs(delta))}`}
+          value={delta === 0 ? t("No change") : `${delta < 0 ? "−" : "+"}${vnd(Math.abs(delta))}`}
           hint={
             delta === 0
-              ? `Since ${shortDate(first.t)}`
-              : `${Math.abs(pct).toFixed(1)}% since ${shortDate(first.t)}`
+              ? t("Since {{date}}", { date: shortDate(first.t) })
+              : t("{{pct}}% since {{date}}", { pct: Math.abs(pct).toFixed(1), date: shortDate(first.t) })
           }
         />
       </div>
 
       <div
         role="img"
-        aria-label={`Price chart for the last ${loadedDays} days. Current ${vnd(current)}, lowest ${vnd(low)}, highest ${vnd(high)}.`}
+        aria-label={t("Price chart for the last {{count}} days. Current {{current}}, lowest {{low}}, highest {{high}}.", { count: loadedDays, current: vnd(current), low: vnd(low), high: vnd(high) })}
         className={`relative h-[300px] sm:h-[360px] w-full transition-opacity duration-200 ${
           refreshing ? "opacity-50" : "opacity-100"
         }`}
@@ -469,7 +473,7 @@ function PriceHistorySection({ data, loading, error, days, loadedDays, onChangeD
 
       {model.raw.length === 1 && (
         <p className="mt-4 text-sm text-slate-500 text-center">
-          Only one price has been recorded so far — the chart fills in as the price changes.
+          {t("Only one price has been recorded so far — the chart fills in as the price changes.")}
         </p>
       )}
     </>,
@@ -500,6 +504,7 @@ function normalizeVideos(list) {
 }
 
 function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
+  const { t } = useTranslation();
   const items = useMemo(() => normalizeVideos(videos), [videos]);
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -531,14 +536,14 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-slate-900 font-questrial leading-tight">
-              Video Reviews
+              {t("Video Reviews")}
               {!loading && !error && items.length > 0 && (
                 <span className="ml-2 align-middle text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-full px-2 py-0.5">
                   {items.length}
                 </span>
               )}
             </h2>
-            <p className="text-sm text-slate-500">Top YouTube reviews for this product</p>
+            <p className="text-sm text-slate-500">{t("Top YouTube reviews for this product")}</p>
           </div>
         </div>
 
@@ -549,7 +554,7 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-rose-600 transition-colors self-start sm:self-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 rounded"
           >
-            More on YouTube <ExternalLink className="w-4 h-4" aria-hidden="true" />
+            {t("More on YouTube")} <ExternalLink className="w-4 h-4" aria-hidden="true" />
           </a>
         )}
       </div>
@@ -558,7 +563,7 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
         <div
           className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-pulse"
           aria-busy="true"
-          aria-label="Loading video reviews"
+          aria-label={t("Loading video reviews")}
         >
           <div className="lg:col-span-8 space-y-3">
             <div className="aspect-video bg-slate-100 rounded-2xl" />
@@ -584,7 +589,7 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
             onClick={onRetry}
             className="inline-flex items-center gap-2 px-5 py-2 bg-white text-red-600 border border-red-200 rounded-xl font-semibold hover:bg-red-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
           >
-            <RefreshCw className="w-4 h-4" aria-hidden="true" /> Try again
+            <RefreshCw className="w-4 h-4" aria-hidden="true" /> {t("Try again")}
           </button>
         </div>
       ) : current ? (
@@ -605,7 +610,7 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
                 <button
                   type="button"
                   onClick={() => setPlaying(true)}
-                  aria-label={`Play video: ${current.title}`}
+                  aria-label={t("Play video: {{title}}", { title: current.title })}
                   className="group absolute inset-0 w-full h-full focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-400/60"
                 >
                   {current.thumb && (
@@ -647,7 +652,7 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
           </div>
 
           {items.length > 1 && (
-            <ul className="lg:col-span-4 space-y-2" aria-label="More video reviews">
+            <ul className="lg:col-span-4 space-y-2" aria-label={t("More video reviews")}>
               {items.map((v, i) => {
                 const isActive = i === active;
                 return (
@@ -685,7 +690,7 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
                         </span>
                         {isActive && (
                           <span className="mt-1 inline-block text-[11px] font-bold text-rose-600 uppercase tracking-wide">
-                            {playing ? "Now playing" : "Selected"}
+                            {playing ? t("Now playing") : t("Selected")}
                           </span>
                         )}
                       </span>
@@ -699,8 +704,8 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
       ) : (
         <div className="bg-slate-50 rounded-2xl text-center py-14 px-4 border border-slate-100 border-dashed">
           <Play className="w-12 h-12 text-slate-300 mx-auto mb-3" aria-hidden="true" />
-          <p className="text-slate-700 font-semibold mb-1">No video reviews found for this product</p>
-          <p className="text-slate-500 text-sm mb-5">We couldn’t find a review that matches it yet.</p>
+          <p className="text-slate-700 font-semibold mb-1">{t("No video reviews found for this product")}</p>
+          <p className="text-slate-500 text-sm mb-5">{t("We couldn’t find a review that matches it yet.")}</p>
           {productName && (
             <a
               href={searchUrl}
@@ -708,7 +713,7 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-semibold text-sm hover:bg-rose-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
             >
-              <Search className="w-4 h-4" aria-hidden="true" /> Search on YouTube
+              <Search className="w-4 h-4" aria-hidden="true" /> {t("Search on YouTube")}
             </a>
           )}
         </div>
@@ -721,6 +726,7 @@ function VideoReviewsSection({ videos, loading, error, productName, onRetry }) {
  *  PAGE
  * ===================================================================== */
 export default function Detail() {
+  const { t } = useTranslation();
   const { id } = useParams();
 
   // Main Product States
@@ -766,7 +772,7 @@ export default function Detail() {
         setProduct(await getProduct(id));
       } catch (err) {
         console.error("Error fetching product details:", err);
-        setError("Cannot load product information. Please try again!");
+        setError(i18n.t("Cannot load product information. Please try again!"));
       } finally {
         setLoading(false);
       }
@@ -779,7 +785,7 @@ export default function Detail() {
         setSuggestions(await getSuggestions(id));
       } catch (err) {
         console.error("Error fetching suggestions:", err);
-        setErrorSuggestions("Cannot load recommended products.");
+        setErrorSuggestions(i18n.t("Cannot load recommended products."));
       } finally {
         setLoadingSuggestions(false);
       }
@@ -810,7 +816,7 @@ export default function Detail() {
       } catch (err) {
         if (ignore) return;
         console.error("Error fetching price history:", err);
-        setErrorHistory("Couldn’t load the price history.");
+        setErrorHistory(i18n.t("Couldn’t load the price history."));
       } finally {
         if (!ignore) setLoadingHistory(false);
       }
@@ -837,7 +843,7 @@ export default function Detail() {
       } catch (err) {
         if (ignore) return;
         console.error("Error fetching video reviews:", err);
-        setErrorVideos("Couldn’t load video reviews.");
+        setErrorVideos(i18n.t("Couldn’t load video reviews."));
       } finally {
         if (!ignore) setLoadingVideos(false);
       }
@@ -851,12 +857,12 @@ export default function Detail() {
 
   // Giá 0 = sàn chưa có giá (sản phẩm ngừng bán / hết hàng lúc thêm)
   const formatPrice = (price) =>
-    price > 0 ? `${price.toLocaleString("vi-VN")} ₫` : "No price yet";
+    price > 0 ? `${price.toLocaleString("vi-VN")} ₫` : t("No price yet");
 
   // Format Date Helper
   const formatDateTime = (dateString) => {
-    if (!dateString) return "Recently";
-    return new Date(dateString).toLocaleString("en-US", {
+    if (!dateString) return t("Recently");
+    return new Date(dateString).toLocaleString(getLocale(), {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -877,7 +883,7 @@ export default function Detail() {
     } catch (err) {
       console.error("Error refreshing suggestions:", err);
       setErrorSuggestions(
-        "Failed to refresh suggestions. Please try again later.",
+        t("Failed to refresh suggestions. Please try again later."),
       );
     } finally {
       setLoadingSuggestions(false);
@@ -887,21 +893,21 @@ export default function Detail() {
   // Xử lý khi bấm nút Track
   const handleTrackProduct = async (suggestion, itemIdentifier) => {
     if (!suggestion.productLink) {
-      toast.error("Cannot track this product: Missing product link.", {
+      toast.error(t("Cannot track this product: Missing product link."), {
         position: "top-right",
       });
       return;
     }
 
     setTrackingId(itemIdentifier);
-    const toastId = toast.loading("Adding Product...", {
+    const toastId = toast.loading(t("Adding product..."), {
       position: "top-right",
     });
 
     try {
       await addProduct(suggestion.productLink);
 
-      toast.success("Added Successfully!", {
+      toast.success(t("Added successfully!"), {
         id: toastId,
         position: "top-right",
       });
@@ -909,7 +915,7 @@ export default function Detail() {
       console.error("Error tracking product:", err);
       const errorMsg =
         err.response?.data?.message ||
-        "Failed to track this product. Please try again.";
+        t("Failed to track this product. Please try again.");
 
       toast.error(errorMsg, {
         id: toastId,
@@ -931,10 +937,10 @@ export default function Detail() {
             to="/products"
             className="hover:text-orange-600 transition-colors"
           >
-            Products
+            {t("Products")}
           </Link>
           <span>/</span>
-          <span className="text-slate-900">Product Detail</span>
+          <span className="text-slate-900">{t("Product Detail")}</span>
         </div>
 
         {/* 1. MAIN PRODUCT SECTION */}
@@ -974,17 +980,17 @@ export default function Detail() {
               onClick={() => window.location.reload()}
               className="mt-4 px-6 py-2 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors font-semibold"
             >
-              Try Again
+              {t("Try again")}
             </button>
           </div>
         ) : !product ? (
           <div className="bg-white rounded-3xl p-16 text-center shadow-sm border border-slate-100">
             <span className="text-6xl mb-4 block">🔍</span>
             <p className="text-2xl text-slate-700 font-bold mb-2">
-              Product not found!
+              {t("Product not found!")}
             </p>
             <p className="text-slate-500">
-              The product you're looking for doesn't exist or has been removed.
+              {t("The product you're looking for doesn't exist or has been removed.")}
             </p>
           </div>
         ) : (
@@ -995,7 +1001,7 @@ export default function Detail() {
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest rounded-full w-max border border-emerald-200/60">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      Product Detail
+                      {t("Product Detail")}
                     </span>
                     <PlatformBadge platform={getPlatformFromUrl(product.productLink)} />
                     {product.isDelisted ? (
@@ -1014,11 +1020,12 @@ export default function Detail() {
               {product.isDelisted && (
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
                   <div className="text-sm text-slate-600 font-syne">
-                    <p className="font-bold text-slate-800 mb-1">This product is no longer available on the platform.</p>
+                    <p className="font-bold text-slate-800 mb-1">{t("This product is no longer available on the platform.")}</p>
                     <p>
-                      Price tracking stopped
-                      {product.delistedAt ? ` on ${new Date(product.delistedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}.
-                      The price below is the last one we recorded. You can remove it from your list or look for an alternative to track instead.
+                      {product.delistedAt
+                        ? t("Price tracking stopped on {{date}}.", { date: new Date(product.delistedAt).toLocaleDateString(getLocale(), { month: "short", day: "numeric", year: "numeric" }) })
+                        : t("Price tracking stopped.")}{" "}
+                      {t("The price below is the last one we recorded. You can remove it from your list or look for an alternative to track instead.")}
                     </p>
                   </div>
                   <button
@@ -1026,7 +1033,7 @@ export default function Detail() {
                     onClick={() => document.getElementById("suggestion")?.scrollIntoView({ behavior: "smooth" })}
                     className="shrink-0 px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold font-syne shadow-sm transition-colors"
                   >
-                    Find alternatives
+                    {t("Find alternatives")}
                   </button>
                 </div>
               )}
@@ -1035,7 +1042,7 @@ export default function Detail() {
                 <div className="lg:col-span-5 relative w-full aspect-square bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 flex items-center justify-center p-6 group">
                   <img
                     src={product.imageURL || "https://via.placeholder.com/400"}
-                    alt={product.productName || "Product"}
+                    alt={product.productName || t("Product")}
                     className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                 </div>
@@ -1045,7 +1052,7 @@ export default function Detail() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 pb-6 border-b border-orange-200/50">
                       <div className="min-w-0">
                         <span className="text-[11px] text-gray-800 uppercase font-bold tracking-wider mb-1.5 block">
-                          Tracked Price
+                          {t("Tracked Price")}
                         </span>
                         <span
                           title={`${product.initialPrice} ₫`}
@@ -1059,7 +1066,7 @@ export default function Detail() {
                       {product.latestPrice > 0 && (
                         <div className="min-w-0 sm:text-right">
                           <span className="text-[11px] text-orange-600 uppercase font-bold tracking-wider mb-1.5 block">
-                            {product.isDelisted || product.isInStock === false ? "Last Known Price" : "Current Market Price"}
+                            {product.isDelisted || product.isInStock === false ? t("Last Known Price") : t("Current Market Price")}
                           </span>
                           <span
                             title={`${product.latestPrice} ₫`}
@@ -1086,7 +1093,7 @@ export default function Detail() {
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        Last updated:{" "}
+                        {t("Last updated:")}{" "}
                         <span className="text-slate-700 font-urbanist font-medium">
                           {formatDateTime(
                             product.lastUpdatedAt || product.updatedAt,
@@ -1101,7 +1108,7 @@ export default function Detail() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-semibold text-sm hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-500/20 active:scale-[0.98] transition-all duration-200"
                         >
-                          Visit Store
+                          {t("Visit Store")}
                           <svg
                             className="w-4 h-4"
                             fill="none"
@@ -1156,7 +1163,7 @@ export default function Detail() {
                   </svg>
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900 font-questrial">
-                  Product Description
+                  {t("Product Description")}
                 </h2>
               </div>
 
@@ -1182,7 +1189,7 @@ export default function Detail() {
                     />
                   </svg>
                   <p className="text-slate-500 font-medium">
-                    No detailed description available for this product.
+                    {t("No detailed description available for this product.")}
                   </p>
                 </div>
               )}
@@ -1204,10 +1211,10 @@ export default function Detail() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <span className="inline-block py-1 bg-gray-100 text-gray-600 text-xl font-bold uppercase tracking-widest rounded-full w-max mb-4">
-                Suggestion Deals
+                {t("Suggested Deals")}
               </span>
               <p className="text-slate-500 text-lg font-syne">
-                Similar products with better pricing options.
+                {t("Similar products with better pricing options.")}
               </p>
             </div>
 
@@ -1225,8 +1232,8 @@ export default function Detail() {
               />
               <span>
                 {loadingSuggestions
-                  ? "Refreshing..."
-                  : " Refresh Suggestions Now "}
+                  ? t("Refreshing...")
+                  : t("Refresh Suggestions Now")}
               </span>
             </button>
           </div>
@@ -1254,12 +1261,10 @@ export default function Detail() {
             <div className="bg-white py-16 px-4 rounded-3xl shadow-sm border border-slate-100 border-dashed text-center">
               <span className="text-5xl mb-4 block">🏷️</span>
               <h3 className="text-xl font-bold text-slate-900 mb-2 font-questrial">
-                No cheaper similar products found
+                {t("No cheaper similar products found")}
               </h3>
               <p className="text-slate-500 max-w-md mx-auto">
-                We couldn't find a similar product at a lower price on the
-                other supported platforms right now. Prices change often – try
-                refreshing later.
+                {t("We couldn't find a similar product at a lower price on the other supported platforms right now. Prices change often – try refreshing later.")}
               </p>
             </div>
           ) : (
@@ -1275,7 +1280,7 @@ export default function Detail() {
                   >
                     {item.savingsAmount > 0 && (
                       <div className="absolute top-4 left-4 bg-rose-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-full z-10 shadow-sm border border-rose-400">
-                        Save {item.savingsAmount?.toLocaleString("vi-VN")} ₫
+                        {t("Save {{amount}}", { amount: `${item.savingsAmount?.toLocaleString("vi-VN")} ₫` })}
                       </div>
                     )}
 
@@ -1308,7 +1313,7 @@ export default function Detail() {
                       </p>
                       <div className="mb-4">
                         <p className="text-sm font-questrial font-bold text-slate-800">
-                          Last updated at -
+                          {t("Last updated at -")}
                         </p>
                         <p className="text-sm font-extrabold font-urbanist text-slate-600">
                           {formatDateTime(item.lastUpdatedAt)}
@@ -1327,7 +1332,7 @@ export default function Detail() {
                             <>
                               <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
                               <span className="text-slate-300 lowercase text-xs font-medium">
-                                TRACKING
+                                {t("TRACKING")}
                               </span>
                             </>
                           ) : (
@@ -1337,7 +1342,7 @@ export default function Detail() {
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                               </span>
                               <span className="group-hover:text-amber-300 transition-colors duration-200">
-                                Track
+                                {t("Track")}
                               </span>
                             </>
                           )}
@@ -1350,7 +1355,7 @@ export default function Detail() {
                             rel="noopener noreferrer"
                             className="flex-1 flex items-center justify-center bg-slate-100 text-slate-800 py-3 rounded-xl font-bold text-sm hover:bg-slate-900 hover:text-white active:scale-[0.98] transition-all duration-200"
                           >
-                            View
+                            {t("View")}
                             <svg
                               className="w-4 h-4 ml-1.5"
                               fill="none"
